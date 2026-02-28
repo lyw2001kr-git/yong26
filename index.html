@@ -44,8 +44,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(1.8rem, 5vw, 5rem);
-      font-weight: bold;
+      font-size: clamp(2.2rem, 6vw, 6rem); /* 글자 크기 크게 */
+      font-weight: 400; /* 굵기 얇게 */
       border: 1px solid #333;
       position: relative;
       box-sizing: border-box;
@@ -58,12 +58,12 @@
       pointer-events: none;
     }
     #sidebar {
-      width: 180px;
+      width: 220px;
       background: #111;
       padding: 10px 0;
       display: flex;
       flex-direction: column;
-      align-items: center;
+      justify-content: space-between;
     }
     #recent {
       flex: 1;
@@ -82,6 +82,20 @@
       background: #222;
       padding: 15px 0;
       border-radius: 10px;
+    }
+    #reset-btn {
+      margin: 20px auto;
+      padding: 15px 30px;
+      font-size: 1.8rem;
+      font-weight: bold;
+      background: #444;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #reset-btn:hover {
+      background: #666;
     }
     #large-number {
       position: fixed;
@@ -108,6 +122,7 @@
 
   <div id="sidebar">
     <div id="recent"></div>
+    <button id="reset-btn">다시</button>
   </div>
 </div>
 
@@ -115,8 +130,10 @@
   const board = document.getElementById('board');
   const recentContainer = document.getElementById('recent');
   const largeNum = document.getElementById('large-number');
+  const resetBtn = document.getElementById('reset-btn');
   const drawn = new Set();
   let numbers = Array.from({length:75}, (_,i) => i+1);
+  let recentNumbers = [];
 
   // 행별 고정 배치 (가로로 1~15 → 16~30 등)
   const rowRanges = [
@@ -139,8 +156,6 @@
     }
   }
 
-  let recentNumbers = []; // 최근 3개만 저장
-
   function drawNumber() {
     if (drawn.size >= 75) {
       alert("모든 번호가 나왔습니다!");
@@ -160,11 +175,9 @@
       cell.classList.add('drawn');
     }
 
-    // 최근 3개만 유지 (위 → 아래 순서)
     recentNumbers.unshift(num);
-    if (recentNumbers.length > 3) recentNumbers.pop();
+    if (recentNumbers.length > 5) recentNumbers.pop();
 
-    // 최근 번호 화면에 표시
     recentContainer.innerHTML = '';
     recentNumbers.forEach(n => {
       const item = document.createElement('div');
@@ -173,13 +186,31 @@
       recentContainer.appendChild(item);
     });
 
-    // 큰 숫자 팝업
     largeNum.textContent = num;
     largeNum.style.opacity = '1';
     setTimeout(() => largeNum.style.opacity = '0', 1800);
   }
 
-  // 스페이스바 + 클릭 + 터치 모두 지원
+  // 리셋 버튼 기능
+  resetBtn.addEventListener('click', () => {
+    if (!confirm("처음부터 다시 시작하시겠습니까?")) return;
+
+    drawn.clear();
+    numbers = Array.from({length:75}, (_,i) => i+1);
+    recentNumbers = [];
+    recentContainer.innerHTML = '';
+
+    document.querySelectorAll('.cell').forEach(cell => {
+      cell.classList.remove('drawn');
+      cell.innerHTML = cell.dataset.num;  // 원래 숫자만 남김
+      const circles = cell.querySelectorAll('.circle');
+      circles.forEach(c => c.remove());
+    });
+
+    largeNum.style.opacity = '0';
+  });
+
+  // 이벤트 리스너
   window.addEventListener('keydown', e => {
     if (e.code === 'Space' || e.key === ' ') {
       e.preventDefault();
@@ -187,10 +218,14 @@
     }
   });
 
-  document.addEventListener('click', drawNumber);
-  document.addEventListener('touchstart', drawNumber); // 모바일 터치
+  document.addEventListener('click', e => {
+    if (e.target.id !== 'reset-btn') drawNumber();
+  });
 
-  // 페이지 로드 시 포커스 강제
+  document.addEventListener('touchstart', e => {
+    if (e.target.id !== 'reset-btn') drawNumber();
+  });
+
   window.focus();
 </script>
 </body>
