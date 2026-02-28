@@ -14,6 +14,7 @@
       color: #fff;
       font-family: Arial, sans-serif;
       user-select: none;
+      touch-action: manipulation; /* 모바일 터치 문제 방지 */
     }
     #container {
       display: flex;
@@ -49,6 +50,7 @@
       border: 1px solid #333;
       position: relative;
       box-sizing: border-box;
+      cursor: pointer;
     }
     .drawn .circle {
       position: absolute;
@@ -116,15 +118,15 @@
   const recentContainer = document.getElementById('recent');
   const largeNum = document.getElementById('large-number');
   const drawn = new Set();
-  let numbers = Array.from({length:75}, (_,i) => i+1); // 1~75
+  let numbers = Array.from({length:75}, (_,i) => i+1);
 
-  // 행별 범위 고정 (가로로 1~15, 16~30, ... 배치)
+  // 행별 고정 배치 (가로로 1~15 → 16~30 등)
   const rowRanges = [
-    Array.from({length:15}, (_,i) => i+1),      // 행 1: 1~15
-    Array.from({length:15}, (_,i) => i+16),     // 행 2: 16~30
-    Array.from({length:15}, (_,i) => i+31),     // 행 3: 31~45
-    Array.from({length:15}, (_,i) => i+46),     // 행 4: 46~60
-    Array.from({length:15}, (_,i) => i+61)      // 행 5: 61~75
+    Array.from({length:15}, (_,i) => i+1),
+    Array.from({length:15}, (_,i) => i+16),
+    Array.from({length:15}, (_,i) => i+31),
+    Array.from({length:15}, (_,i) => i+46),
+    Array.from({length:15}, (_,i) => i+61)
   ];
 
   // 판 생성
@@ -134,8 +136,7 @@
       const cell = document.createElement('div');
       cell.className = 'cell';
       cell.dataset.num = num;
-      cell.innerHTML = `<span>${num}</span>`;
-      cell.addEventListener('click', drawNumber);
+      cell.textContent = num;
       board.appendChild(cell);
     }
   }
@@ -151,15 +152,14 @@
     numbers.splice(idx, 1);
     drawn.add(num);
 
-    // 해당 숫자에 빨간 원형 테두리만 추가
     const cell = document.querySelector(`.cell[data-num="${num}"]`);
     if (cell) {
       const circle = document.createElement('div');
       circle.className = 'circle';
       cell.appendChild(circle);
+      cell.classList.add('drawn');
     }
 
-    // 최근 5개 번호 업데이트 (위 → 아래)
     recentNumbers.unshift(num);
     if (recentNumbers.length > 5) recentNumbers.pop();
 
@@ -171,21 +171,25 @@
       recentContainer.appendChild(item);
     });
 
-    // 화면 중앙에 큰 숫자 팝업
     largeNum.textContent = num;
     largeNum.style.opacity = '1';
     setTimeout(() => largeNum.style.opacity = '0', 1800);
   }
 
-  // 스페이스바 + 클릭으로 드로우
+  // 전체 화면 클릭/터치 이벤트 (모든 곳에서 드로우)
+  document.addEventListener('click', drawNumber);
+  document.addEventListener('touchstart', drawNumber); // 모바일 터치 지원
+
+  // 스페이스바 이벤트 (포커스 문제 해결)
   window.addEventListener('keydown', e => {
-    if (e.code === 'Space') {
+    if (e.code === 'Space' || e.key === ' ') {
       e.preventDefault();
       drawNumber();
     }
   });
 
-  document.addEventListener('click', drawNumber);
+  // 페이지 로드 시 포커스 강제 (키보드 이벤트 활성화)
+  window.focus();
 </script>
 </body>
 </html>
