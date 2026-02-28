@@ -118,19 +118,19 @@
   const drawn = new Set();
   let numbers = Array.from({length:75}, (_,i) => i+1); // 1~75
 
-  // 행별 숫자 범위 고정
-  const ranges = [
-    Array.from({length:15}, (_,i) => i+1),     // 1~15
-    Array.from({length:15}, (_,i) => i+16),    // 16~30
-    Array.from({length:15}, (_,i) => i+31),    // 31~45
-    Array.from({length:15}, (_,i) => i+46),    // 46~60
-    Array.from({length:15}, (_,i) => i+61)     // 61~75
+  // 행별 범위 고정 (가로로 1~15, 16~30, ... 배치)
+  const rowRanges = [
+    Array.from({length:15}, (_,i) => i+1),      // 행 1: 1~15
+    Array.from({length:15}, (_,i) => i+16),     // 행 2: 16~30
+    Array.from({length:15}, (_,i) => i+31),     // 행 3: 31~45
+    Array.from({length:15}, (_,i) => i+46),     // 행 4: 46~60
+    Array.from({length:15}, (_,i) => i+61)      // 행 5: 61~75
   ];
 
-  // 판 생성 (접두사 없이 숫자만)
+  // 판 생성
   for (let row = 0; row < 5; row++) {
     for (let col = 0; col < 15; col++) {
-      const num = ranges[row][col];
+      const num = rowRanges[row][col];
       const cell = document.createElement('div');
       cell.className = 'cell';
       cell.dataset.num = num;
@@ -151,7 +151,7 @@
     numbers.splice(idx, 1);
     drawn.add(num);
 
-    // 빨간 원 테두리만 추가
+    // 해당 숫자에 빨간 원형 테두리만 추가
     const cell = document.querySelector(`.cell[data-num="${num}"]`);
     if (cell) {
       const circle = document.createElement('div');
@@ -159,7 +159,7 @@
       cell.appendChild(circle);
     }
 
-    // 최근 5개 번호 (위 → 아래)
+    // 최근 5개 번호 업데이트 (위 → 아래)
     recentNumbers.unshift(num);
     if (recentNumbers.length > 5) recentNumbers.pop();
 
@@ -171,7 +171,7 @@
       recentContainer.appendChild(item);
     });
 
-    // 중앙에 큰 숫자 팝업 (숫자만)
+    // 화면 중앙에 큰 숫자 팝업
     largeNum.textContent = num;
     largeNum.style.opacity = '1';
     setTimeout(() => largeNum.style.opacity = '0', 1800);
