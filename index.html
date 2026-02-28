@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>임마누엘 빙고 드로우 (yong)</title>
+  <title>임마누엘 빙고 드로우</title>
   <style>
     body, html {
       margin: 0;
@@ -16,32 +16,23 @@
       user-select: none;
     }
     #container {
-      position: relative;
+      display: flex;
       width: 100%;
       height: 100%;
-      display: flex;
-      flex-direction: column;
     }
-    #header {
-      text-align: center;
-      padding: 20px;
-      background: #222;
-      font-size: 2.5rem;
-      letter-spacing: 4px;
-    }
-    #main {
+    #board-area {
       flex: 1;
       display: flex;
       justify-content: center;
       align-items: center;
-      position: relative;
+      padding: 20px;
     }
     #board {
       display: grid;
       grid-template-columns: repeat(15, 1fr);
       grid-template-rows: repeat(5, 1fr);
       gap: 4px;
-      max-width: 95vw;
+      max-width: 90vw;
       max-height: 80vh;
       aspect-ratio: 15 / 5;
     }
@@ -51,7 +42,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(1.8rem, 5vw, 4.5rem);
+      font-size: clamp(2rem, 5vw, 5rem);
       font-weight: bold;
       border: 2px solid #444;
       position: relative;
@@ -68,6 +59,32 @@
       border-radius: 50%;
       pointer-events: none;
     }
+    #sidebar {
+      width: 220px;
+      background: #222;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #recent {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 20px;
+      width: 100%;
+    }
+    .recent-item {
+      background: #333;
+      color: #ffcc00;
+      font-size: 3rem;
+      font-weight: bold;
+      text-align: center;
+      padding: 15px 0;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
     #large-number {
       position: fixed;
       top: 50%;
@@ -76,63 +93,57 @@
       font-size: 35vw;
       font-weight: bold;
       color: red;
-      text-shadow: 0 0 30px rgba(255,0,0,0.7);
+      text-shadow: 0 0 40px rgba(255,0,0,0.8);
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.3s;
+      transition: opacity 0.4s;
       z-index: 100;
     }
     #instruction {
       position: absolute;
-      bottom: 30px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 1.8rem;
-      color: #aaa;
+      font-size: 1.6rem;
+      color: #888;
     }
   </style>
 </head>
 <body>
 
 <div id="container">
-  <div id="header">임마누엘 빙고 드로우</div>
-  <div id="main">
+  <div id="board-area">
     <div id="board"></div>
     <div id="large-number"></div>
   </div>
-  <div id="instruction">스페이스바 또는 클릭 → 다음 번호</div>
+
+  <div id="sidebar">
+    <div id="recent">
+      <!-- 최근 5개 번호가 위에서 아래로 -->
+    </div>
+  </div>
 </div>
+
+<div id="instruction">스페이스바 또는 클릭 → 다음 번호</div>
 
 <script>
   const board = document.getElementById('board');
+  const recentContainer = document.getElementById('recent');
   const largeNum = document.getElementById('large-number');
   const drawn = new Set();
   const numbers = Array.from({length:75}, (_,i) => i+1);
+  const recentNumbers = []; // 최근 5개 저장
 
-  // B I N G O 헤더 + 숫자 셀 생성
-  const letters = ['B','I','N','G','O'];
+  // 5행 × 15열 숫자판 (B I N G O 헤더 없이)
   for (let row = 0; row < 5; row++) {
     for (let col = 0; col < 15; col++) {
+      const base = col * 15 + 1;
+      const num = base + row;
       const cell = document.createElement('div');
       cell.className = 'cell';
-
-      if (row === 0) {
-        // 첫 행: B I N G O
-        cell.textContent = letters[col % 5];
-        cell.style.background = '#222';
-        cell.style.color = 'white';
-        cell.style.fontSize = 'clamp(2rem, 6vw, 6rem)';
-      } else {
-        // 숫자 셀
-        const base = col * 15 + 1;
-        const num = base + (row - 1);
-        cell.dataset.num = num;
-        cell.textContent = num;
-
-        // 클릭 시 드로우 (편의용)
-        cell.addEventListener('click', drawNumber);
-      }
-
+      cell.dataset.num = num;
+      cell.textContent = num;
+      cell.addEventListener('click', drawNumber); // 클릭으로도 드로우
       board.appendChild(cell);
     }
   }
@@ -145,13 +156,14 @@
 
     let num;
     do {
-      num = numbers[Math.floor(Math.random() * numbers.length)];
+      const idx = Math.floor(Math.random() * numbers.length);
+      num = numbers[idx];
+      numbers.splice(idx, 1);
     } while (drawn.has(num));
 
     drawn.add(num);
-    numbers.splice(numbers.indexOf(num), 1);
 
-    // 해당 셀 빨간 원 + 배경 변경
+    // 해당 셀에 빨간 원 + 배경 변경
     const cell = document.querySelector(`.cell[data-num="${num}"]`);
     if (cell) {
       cell.classList.add('drawn');
@@ -160,12 +172,23 @@
       cell.appendChild(circle);
     }
 
+    // 최근 번호 업데이트 (최대 5개)
+    recentNumbers.unshift(getPrefix(num) + num);
+    if (recentNumbers.length > 5) recentNumbers.pop();
+
+    // 사이드바에 위에서 아래로 표시
+    recentContainer.innerHTML = '';
+    recentNumbers.forEach((txt, idx) => {
+      const item = document.createElement('div');
+      item.className = 'recent-item';
+      item.textContent = txt;
+      recentContainer.appendChild(item);
+    });
+
     // 큰 숫자 팝업
     largeNum.textContent = getPrefix(num) + num;
     largeNum.style.opacity = '1';
-    setTimeout(() => {
-      largeNum.style.opacity = '0';
-    }, 1800);
+    setTimeout(() => { largeNum.style.opacity = '0'; }, 1800);
   }
 
   function getPrefix(n) {
@@ -176,7 +199,7 @@
     return 'O';
   }
 
-  // 스페이스바 + 마우스 클릭으로 드로우
+  // 스페이스바 + 클릭 이벤트
   window.addEventListener('keydown', e => {
     if (e.code === 'Space') {
       e.preventDefault();
@@ -184,16 +207,15 @@
     }
   });
 
-  // 페이지 전체 클릭도 드로우 (편의용)
   document.addEventListener('click', e => {
-    // 버튼 등 제외하려면 필요시 조건 추가
-    drawNumber();
+    // instruction 영역 클릭 무시 (필요시)
+    if (e.target.id !== 'instruction') drawNumber();
   });
 
   // 처음 로드 시 안내
-  largeNum.textContent = "스페이스바 or 클릭!";
+  largeNum.textContent = "시작!";
   largeNum.style.opacity = '1';
-  setTimeout(() => largeNum.style.opacity = '0', 3000);
+  setTimeout(() => largeNum.style.opacity = '0', 2500);
 </script>
 </body>
 </html>
