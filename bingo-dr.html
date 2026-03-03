@@ -66,6 +66,23 @@
       flex-direction: column;
       gap: 10px;
     }
+    #bingo-count {
+      text-align: center;
+      font-size: 2.2rem;
+      font-weight: bold;
+      padding: 12px;
+      background: #004400;
+      border-radius: 10px;
+      margin: 0 8px;
+    }
+    #mode-display {
+      text-align: center;
+      font-size: 1.6rem;
+      padding: 6px;
+      background: #222;
+      border-radius: 8px;
+      margin: 0 8px;
+    }
     #recent {
       flex: 1;
       display: flex;
@@ -81,26 +98,12 @@
       background: #222;
       padding: 10px 0;
       border-radius: 8px;
+      opacity: 0.7;
     }
     .recent-item:first-child {
-      color: #ff0000;           /* 가장 최근 번호 빨강 */
+      color: #ff0000;
       background: #330000;
-    }
-    #bingo-count {
-      text-align: center;
-      font-size: 2.2rem;
-      padding: 10px;
-      background: #004400;
-      border-radius: 8px;
-      margin: 0 8px;
-    }
-    #mode-display {
-      text-align: center;
-      font-size: 1.6rem;
-      padding: 6px;
-      background: #222;
-      border-radius: 8px;
-      margin: 0 8px;
+      opacity: 1;
     }
     .mode-btn {
       font-size: 1.3rem;
@@ -162,13 +165,13 @@ const resetBtn = document.getElementById('reset-btn');
 let allCards = [];
 let playerCards = [];
 let called = new Set();
-let drawn = new Set();              // 오늘 빙고 된 card_id 집합
-let prevBingoCount = 0;             // 이전 빙고 인원 (표시용)
-let currentMode = 'off';
+let totalWonToday = new Set();     // 오늘 빙고/풀카바 된 card_id 누적 (localStorage)
+let currentBingoCount = 0;         // 이번 세션(이번 실행 후) 빙고 된 사람 수
 
 const TODAY = new Date().toDateString();
-const STORAGE_KEY_WON = 'bingo_won_today';
-const STORAGE_KEY_MODE = 'bingo_mode_today';
+const STORAGE_KEY = 'bingo_total_won_today';
+
+let currentMode = 'off';
 
 fetch('cards.json')
   .then(res => res.json())
@@ -182,32 +185,29 @@ fetch('cards.json')
   });
 
 function initGame() {
-  loadSavedData();
+  loadTotalWon();
   assignPlayerCards();
   buildBoard();
-  updateBingoCount();
+  updateBingoDisplay();
   updateModeDisplay();
 }
 
-function loadSavedData() {
-  const savedMode = localStorage.getItem(STORAGE_KEY_MODE);
-  if (savedMode) {
-    const data = JSON.parse(savedMode);
-    if (data.date === TODAY) currentMode = data.mode;
-  }
-
-  const savedWon = localStorage.getItem(STORAGE_KEY_WON);
-  if (savedWon) {
-    const data = JSON.parse(savedWon);
+function loadTotalWon() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    const data = JSON.parse(saved);
     if (data.date === TODAY) {
-      drawn = new Set(data.cardIds.map(String));
+      totalWonToday = new Set(data.cardIds.map(String));
     }
   }
+  currentBingoCount = 0;
 }
 
-function saveData() {
-  localStorage.setItem(STORAGE_KEY_MODE, JSON.stringify({date: TODAY, mode: currentMode}));
-  localStorage.setItem(STORAGE_KEY_WON, JSON.stringify({date: TODAY, cardIds: Array.from(drawn)}));
+function saveTotalWon() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    date: TODAY,
+    cardIds: Array.from(totalWonToday)
+  }));
 }
 
 function assignPlayerCards() {
@@ -241,61 +241,61 @@ function isBingo(grid, isFull = false) {
   }
 
   let lines = 0;
-  // 행
   for (let r of grid) {
     if (r.every(n => n === "001" || calledArr.includes(Number(n)))) lines++;
   }
-  // 열
   for (let c = 0; c < 5; c++) {
     if (grid.every(r => r[c] === "001" || calledArr.includes(Number(r[c])))) lines++;
   }
-  // 대각선
   if (grid.every((r,i) => r[i] === "001" || calledArr.includes(Number(r[i])))) lines++;
   if (grid.every((r,i) => r[4-i] === "001" || calledArr.includes(Number(r[4-i])))) lines++;
 
   return lines >= 1;
 }
 
-function updateBingoCount() {
-  let currentCount = 0;
+function updateBingoDisplay() {
+  let thisDrawNew = 0;
+
   playerCards.forEach(idx => {
     const card = allCards[idx];
+    const cardId = String(card.card_id);
     const isFullMode = currentMode === 'full';
+
     if (isBingo(card.grid, isFullMode)) {
-      currentCount++;
-      const cid = String(card.card_id);
-      if (!drawn.has(cid)) {
-        drawn.add(cid);
-        saveData();
+      if (!totalWonToday.has(cardId)) {
+        totalWonToday.add(cardId);
+        thisDrawNew++;
+        saveTotalWon();
       }
     }
   });
 
-  // 표시: 현재 / 이전
-  bingoCountEl.textContent = `빙고: ${currentCount}/${prevBingoCount}`;
-  prevBingoCount = currentCount;  // 다음 드로우를 위해 업데이트
+  currentBingoCount += thisDrawNew;
+  const totalToday = totalWonToday.size;
+
+  bingoCountEl.textContent = `빙고: ${thisDrawNew}/${totalToday}`;
 }
 
 function updateModeDisplay() {
   modeDisplay.textContent = `현재 모드: ${currentMode.toUpperCase()}`;
 }
 
-// 모드 버튼 (플래시 없이 즉시 변경)
-document.getElementById('btn-on').onclick = () => { currentMode = 'on'; saveData(); updateModeDisplay(); };
-document.getElementById('btn-off').onclick = () => { currentMode = 'off'; saveData(); updateModeDisplay(); };
-document.getElementById('btn-full').onclick = () => { currentMode = 'full'; saveData(); updateModeDisplay(); };
+// 모드 변경 (팝업 없이)
+document.getElementById('btn-on').onclick = () => { currentMode = 'on'; updateModeDisplay(); };
+document.getElementById('btn-off').onclick = () => { currentMode = 'off'; updateModeDisplay(); };
+document.getElementById('btn-full').onclick = () => { currentMode = 'full'; updateModeDisplay(); };
 
-// 숫자 뽑기
+// 드로우
 function drawNumber() {
   if (called.size >= 75) return alert("모든 숫자 소진!");
 
   let candidates = Array.from({length:75}, (_,i)=>i+1).filter(n => !called.has(n));
 
-  if (currentMode === 'on' && drawn.size < allCards.length) {
+  if (currentMode === 'on' && totalWonToday.size < allCards.length) {
     const possible = new Set();
     playerCards.forEach(idx => {
       const cid = allCards[idx].card_id;
-      if (!drawn.has(cid)) {
+      if (!totalWonToday.has(cid)) {
         allCards[idx].grid.flat().forEach(n => {
           if (n !== "001" && !called.has(Number(n))) possible.add(Number(n));
         });
@@ -303,7 +303,6 @@ function drawNumber() {
     });
     if (possible.size > 0) candidates = [...possible];
   }
-  // full 모드는 랜덤 유지 (상품 많아서)
 
   const num = candidates[Math.floor(Math.random() * candidates.length)];
   if (!num) return;
@@ -318,21 +317,17 @@ function drawNumber() {
     cell.classList.add('drawn');
   }
 
-  // 최근 5개 (최신이 첫 번째 → 빨강)
-  const recentList = recentContainer.querySelectorAll('.recent-item');
-  const recentNums = Array.from(recentList).map(el => el.textContent);
+  // 최근 5개 업데이트 (최신이 첫 번째, 빨강)
+  const recentNums = Array.from(recentContainer.querySelectorAll('.recent-item')).map(el => el.textContent);
   recentNums.unshift(num);
   if (recentNums.length > 5) recentNums.pop();
-
-  recentContainer.innerHTML = recentNums.map((n, i) => 
-    `<div class="recent-item">${n}</div>`
-  ).join('');
+  recentContainer.innerHTML = recentNums.map(n => `<div class="recent-item">${n}</div>`).join('');
 
   largeNum.textContent = num;
   largeNum.style.opacity = '1';
   setTimeout(() => largeNum.style.opacity = '0', 1800);
 
-  updateBingoCount();
+  updateBingoDisplay();
 }
 
 // 이벤트
@@ -344,26 +339,23 @@ window.addEventListener('keydown', e => {
 });
 
 document.addEventListener('click', e => {
-  if (!['BUTTON'].includes(e.target.tagName)) drawNumber();
+  if (e.target.tagName !== 'BUTTON') drawNumber();
 });
 
 resetBtn.onclick = () => {
-  if (!confirm("보드만 초기화합니다. 빙고 누적은 유지됩니다.")) return;
+  if (!confirm("보드와 이번 세션 빙고만 초기화합니다. 오늘 총 누적은 유지됩니다.")) return;
+
   called.clear();
+  currentBingoCount = 0;
   document.querySelectorAll('.cell').forEach(c => {
     c.classList.remove('drawn');
     c.innerHTML = c.dataset.num;
   });
   recentContainer.innerHTML = '';
-  updateBingoCount();  // 누적은 그대로
+  updateBingoDisplay();
 };
 
 // 시작
-if (allCards.length === 0) {
-  // cards.json 로드 대기
-} else {
-  initGame();
-}
 </script>
 </body>
 </html>
