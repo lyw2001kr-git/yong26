@@ -65,7 +65,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      font-size: 1.1rem; /* 전체 글자 크기 줄임 */
+      font-size: 1.1rem;
     }
     #status-area, #bingo-count, #mode-display {
       text-align: center;
@@ -73,7 +73,7 @@
       background: #222;
       border-radius: 6px;
       margin: 0 8px;
-      font-size: 1.3rem; /* 상태 표시 글자 작게 */
+      font-size: 1.3rem;
     }
     #bingo-count {
       font-size: 1.6rem;
@@ -88,7 +88,7 @@
       overflow-y: auto;
     }
     .recent-item {
-      font-size: 2.6rem; /* 최근 5개는 그대로 크게 유지 */
+      font-size: 2.6rem;
       font-weight: bold;
       text-align: center;
       background: #222;
@@ -146,11 +146,11 @@
     <div id="mode-display">현재 모드: OFF</div>
 
     <div style="display: flex; flex-direction: column; gap: 6px; padding: 0 8px;">
-      <button class="control-btn" id="btn-on">ON</button>
+      <button class="control-btn" id="btn-clear">초기화</button>
       <button class="control-btn" id="btn-off">OFF</button>
       <button class="control-btn" id="btn-full">FULL</button>
+      <button class="control-btn" id="btn-on">ON</button>
       <button class="control-btn" id="btn-reset">새 판 시작</button>
-      <button class="control-btn" id="btn-clear">초기화</button>
     </div>
 
     <div id="recent"></div>
@@ -170,8 +170,8 @@ const clearBtn = document.getElementById('btn-clear');
 let allCards = [];
 let playerCards = [];
 let called = new Set();
-let wonThisCycle = new Set();   // 전체 사이클 누적 당첨
-let wonThisSession = new Set(); // 이번 판 표시용
+let wonThisCycle = new Set();
+let wonThisSession = new Set();
 let drawCount = 0;
 
 let currentMode = 'off';
@@ -266,7 +266,7 @@ function updateStatus() {
   modeDisplay.textContent = `현재 모드: ${currentMode.toUpperCase()}`;
 }
 
-// 모드 및 제어 버튼
+// 버튼 이벤트
 document.getElementById('btn-on').onclick = () => { currentMode = 'on'; updateModeDisplay(); };
 document.getElementById('btn-off').onclick = () => { currentMode = 'off'; updateModeDisplay(); };
 document.getElementById('btn-full').onclick = () => { currentMode = 'full'; updateModeDisplay(); };
@@ -278,13 +278,13 @@ document.getElementById('btn-reset').onclick = () => {
 };
 
 document.getElementById('btn-clear').onclick = () => {
-  if (confirm("전체 초기화 하시겠습니까?\n모든 카드 당첨 기록이 지워지고 처음부터 시작합니다.")) {
+  if (confirm("전체 초기화 하시겠습니까?\n모든 카드 당첨 기록이 지워집니다.")) {
     wonThisCycle.clear();
     startNewSession();
   }
 };
 
-// 드로우
+// 드로우 함수
 function drawNumber() {
   if (called.size >= 75 || drawCount >= 75) {
     alert("이번 판 모든 숫자(75개)가 나왔습니다!");
@@ -337,7 +337,7 @@ function drawNumber() {
   updateBingoDisplay();
 }
 
-// 이벤트
+// 이벤트 리스너
 window.addEventListener('keydown', e => {
   if (e.code === 'Space') {
     e.preventDefault();
