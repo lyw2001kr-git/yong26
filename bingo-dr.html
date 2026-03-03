@@ -64,43 +64,31 @@
       padding: 8px 0;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
+      font-size: 1.1rem; /* 전체 글자 크기 줄임 */
     }
-    #status-area {
+    #status-area, #bingo-count, #mode-display {
       text-align: center;
-      font-size: 1.8rem;
-      padding: 10px;
+      padding: 8px;
       background: #222;
-      border-radius: 8px;
+      border-radius: 6px;
       margin: 0 8px;
+      font-size: 1.3rem; /* 상태 표시 글자 작게 */
     }
     #bingo-count {
-      text-align: center;
-      font-size: 2.2rem;
-      font-weight: bold;
-      padding: 12px;
-      background: #004400;
-      border-radius: 10px;
-      margin: 0 8px;
-    }
-    #mode-display {
-      text-align: center;
       font-size: 1.6rem;
-      padding: 6px;
-      background: #222;
-      border-radius: 8px;
-      margin: 0 8px;
+      background: #004400;
     }
     #recent {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       padding: 0 8px;
       overflow-y: auto;
     }
     .recent-item {
-      font-size: 2.6rem;
+      font-size: 2.6rem; /* 최근 5개는 그대로 크게 유지 */
       font-weight: bold;
       text-align: center;
       background: #222;
@@ -113,22 +101,21 @@
       background: #330000;
       opacity: 1;
     }
-    .mode-btn, .reset-btn, .clear-btn {
-      font-size: 1.3rem;
-      padding: 10px 20px;
-      margin: 6px auto;
+    .control-btn {
+      font-size: 1.2rem;
+      padding: 10px;
+      margin: 4px 8px;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       color: white;
       cursor: pointer;
-      display: block;
-      width: 80%;
+      width: calc(100% - 16px);
     }
     #btn-on { background: #006600; }
     #btn-off { background: #444444; }
     #btn-full { background: #880000; }
-    #reset-btn { background: #555; }
-    #clear-btn { background: #8B0000; } /* 진한 빨강으로 강조 */
+    #btn-reset { background: #336699; }
+    #btn-clear { background: #8B0000; }
     #large-number {
       position: fixed;
       top: 50%;
@@ -157,13 +144,15 @@
     <div id="status-area">드로우: 0/75</div>
     <div id="bingo-count">빙고: 0/0</div>
     <div id="mode-display">현재 모드: OFF</div>
-    <div style="text-align:center; padding:8px;">
-      <button class="mode-btn" id="btn-on">ON</button>
-      <button class="mode-btn" id="btn-off">OFF</button>
-      <button class="mode-btn" id="btn-full">FULL</button>
+
+    <div style="display: flex; flex-direction: column; gap: 6px; padding: 0 8px;">
+      <button class="control-btn" id="btn-on">ON</button>
+      <button class="control-btn" id="btn-off">OFF</button>
+      <button class="control-btn" id="btn-full">FULL</button>
+      <button class="control-btn" id="btn-reset">새 판 시작</button>
+      <button class="control-btn" id="btn-clear">초기화</button>
     </div>
-    <button id="clear-btn">초기화 (전체 리셋)</button>
-    <button id="reset-btn">새 판 시작</button>
+
     <div id="recent"></div>
   </div>
 </div>
@@ -175,14 +164,14 @@ const largeNum = document.getElementById('large-number');
 const bingoCountEl = document.getElementById('bingo-count');
 const modeDisplay = document.getElementById('mode-display');
 const statusArea = document.getElementById('status-area');
-const resetBtn = document.getElementById('reset-btn');
-const clearBtn = document.getElementById('clear-btn');
+const resetBtn = document.getElementById('btn-reset');
+const clearBtn = document.getElementById('btn-clear');
 
 let allCards = [];
 let playerCards = [];
 let called = new Set();
-let wonThisCycle = new Set();   // 전체 사이클 누적 (100장 채워지면 off 전환)
-let wonThisSession = new Set(); // 이번 판 새로 당첨된 카드 (표시용)
+let wonThisCycle = new Set();   // 전체 사이클 누적 당첨
+let wonThisSession = new Set(); // 이번 판 표시용
 let drawCount = 0;
 
 let currentMode = 'off';
@@ -265,11 +254,10 @@ function updateBingoDisplay() {
 
   bingoCountEl.textContent = `빙고: ${newThisDraw}/${wonThisSession.size}`;
 
-  // 100장 모두 당첨 시 자동 off 전환
   if (wonThisCycle.size >= allCards.length && currentMode !== 'off') {
     currentMode = 'off';
     updateModeDisplay();
-    alert("100장 카드가 모두 최소 1번 당첨되었습니다.\n자동으로 OFF 모드(랜덤)로 전환합니다.");
+    alert("100장 카드가 모두 최소 1번 당첨되었습니다.\n자동으로 OFF 모드로 전환합니다.");
   }
 }
 
@@ -278,10 +266,23 @@ function updateStatus() {
   modeDisplay.textContent = `현재 모드: ${currentMode.toUpperCase()}`;
 }
 
-// 모드 버튼
+// 모드 및 제어 버튼
 document.getElementById('btn-on').onclick = () => { currentMode = 'on'; updateModeDisplay(); };
 document.getElementById('btn-off').onclick = () => { currentMode = 'off'; updateModeDisplay(); };
 document.getElementById('btn-full').onclick = () => { currentMode = 'full'; updateModeDisplay(); };
+
+document.getElementById('btn-reset').onclick = () => {
+  if (confirm("새 판을 시작합니다.\n이번 판 빙고와 드로우가 초기화됩니다.")) {
+    startNewSession();
+  }
+};
+
+document.getElementById('btn-clear').onclick = () => {
+  if (confirm("전체 초기화 하시겠습니까?\n모든 카드 당첨 기록이 지워지고 처음부터 시작합니다.")) {
+    wonThisCycle.clear();
+    startNewSession();
+  }
+};
 
 // 드로우
 function drawNumber() {
@@ -347,21 +348,6 @@ window.addEventListener('keydown', e => {
 document.addEventListener('click', e => {
   if (e.target.tagName !== 'BUTTON') drawNumber();
 });
-
-// 새 판 시작 (이번 판 초기화)
-resetBtn.onclick = () => {
-  if (confirm("새 판을 시작합니다.\n(이번 판 빙고/드로우 초기화)")) {
-    startNewSession();
-  }
-};
-
-// 전체 초기화 (모든 당첨 기록 삭제)
-clearBtn.onclick = () => {
-  if (confirm("전체 초기화 하시겠습니까?\n(모든 카드 당첨 기록이 삭제되고 처음부터 시작합니다)")) {
-    wonThisCycle.clear();
-    startNewSession();
-  }
-};
 </script>
 </body>
 </html>
