@@ -175,8 +175,10 @@ const resetBtn = document.getElementById('reset-btn');
 let allCards = [];
 let playerCards = [];
 let called = new Set();
-let wonThisSession = new Set();  // 이번 판 당첨된 card_id
-let drawCount = 0;               // 이번 판 드로우 횟수
+let wonThisCycle = new Set();   // 전체 사이클 누적 당첨 카드 (100장 채워지면 리셋)
+let wonThisSession = new Set(); // 이번 판 새로 당첨된 카드 (빙고 표시용)
+let drawCount = 0;
+let resetClickCount = 0;        // 새 판 버튼 클릭 횟수 (처음 3번은 전체 초기화)
 
 let currentMode = 'off';
 
@@ -188,10 +190,17 @@ fetch('cards.json')
   })
   .catch(err => alert("cards.json 로드 실패: " + err));
 
-function startNewSession() {
+function startNewSession(resetAll = false) {
   called.clear();
   wonThisSession.clear();
   drawCount = 0;
+
+  if (resetAll) {
+    wonThisCycle.clear();
+    resetClickCount = 0;
+    alert("전체 초기화 완료 (새 사이클 시작)");
+  }
+
   assignPlayerCards();
   buildBoard();
   recentContainer.innerHTML = '';
@@ -226,7 +235,9 @@ function isBingo(grid, isFull = false) {
   const calledArr = [...called];
   const flatNonFree = grid.flat().filter(n => n !== "001");
 
-  if (isFull) return flatNonFree.every(n => calledArr.includes(Number(n)));
+  if (isFull) {
+    return flatNonFree.every(n => calledArr.includes(Number(n)));
+  }
 
   let lines = 0;
   for (let r of grid) if (r.every(n => n === "001" || calledArr.includes(Number(n)))) lines++;
@@ -245,21 +256,29 @@ function updateBingoDisplay() {
     const cardId = String(card.card_id);
     const isFullMode = currentMode === 'full';
 
-    if (isBingo(card.grid, isFullMode) && !wonThisSession.has(cardId)) {
-      wonThisSession.add(cardId);
-      newThisDraw++;
+    if (isBingo(card.grid, isFullMode)) {
+      if (!wonThisSession.has(cardId)) {
+        wonThisSession.add(cardId);
+        newThisDraw++;
+      }
+      if (!wonThisCycle.has(cardId)) {
+        wonThisCycle.add(cardId);
+      }
     }
   });
 
   bingoCountEl.textContent = `빙고: ${newThisDraw}/${wonThisSession.size}`;
+
+  // 100장 모두 당첨 → 자동 off + 알림
+  if (wonThisCycle.size >= allCards.length && currentMode !== 'off') {
+    currentMode = 'off';
+    updateModeDisplay();
+    alert("100장 카드가 모두 최소 1번 당첨되었습니다.\n자동으로 OFF 모드(랜덤)로 전환합니다.");
+  }
 }
 
 function updateStatus() {
   statusArea.textContent = `드로우: ${drawCount}/75`;
-  modeDisplay.textContent = `현재 모드: ${currentMode.toUpperCase()}`;
-}
-
-function updateModeDisplay() {
   modeDisplay.textContent = `현재 모드: ${currentMode.toUpperCase()}`;
 }
 
@@ -268,7 +287,7 @@ document.getElementById('btn-on').onclick = () => { currentMode = 'on'; updateMo
 document.getElementById('btn-off').onclick = () => { currentMode = 'off'; updateModeDisplay(); };
 document.getElementById('btn-full').onclick = () => { currentMode = 'full'; updateModeDisplay(); };
 
-// 드로우 핵심 로직
+// 드로우
 function drawNumber() {
   if (called.size >= 75 || drawCount >= 75) {
     alert("이번 판 모든 숫자(75개)가 나왔습니다!");
@@ -278,21 +297,13 @@ function drawNumber() {
   drawCount++;
   updateStatus();
 
-  // 모든 카드가 당첨됐으면 자동 off 전환
-  if (wonThisSession.size >= allCards.length && currentMode !== 'off') {
-    currentMode = 'off';
-    updateModeDisplay();
-    alert("모든 100장 카드가 당첨되었습니다. 자동으로 OFF(랜덤) 모드로 전환합니다.");
-  }
-
   let candidates = Array.from({length:75}, (_,i)=>i+1).filter(n => !called.has(n));
 
-  // on 또는 full 모드에서 아직 안 된 카드 우선
-  if ((currentMode === 'on' || currentMode === 'full') && wonThisSession.size < allCards.length) {
+  if ((currentMode === 'on' || currentMode === 'full') && wonThisCycle.size < allCards.length) {
     const possible = new Set();
     playerCards.forEach(idx => {
       const cid = allCards[idx].card_id;
-      if (!wonThisSession.has(cid)) {
+      if (!wonThisCycle.has(cid)) {
         allCards[idx].grid.flat().forEach(n => {
           const num = Number(n);
           if (n !== "001" && !isNaN(num) && num >= 1 && num <= 75 && !called.has(num)) {
@@ -304,9 +315,9 @@ function drawNumber() {
     if (possible.size > 0) candidates = [...possible];
   }
 
-  const idx = Math.floor(Math.random() * candidates.length);
-  const num = candidates[idx];
+  if (candidates.length === 0) return alert("더 이상 뽑을 숫자가 없습니다.");
 
+  const num = candidates[Math.floor(Math.random() * candidates.length)];
   called.add(num);
 
   const cell = board.querySelector(`[data-num="${num}"]`);
@@ -317,7 +328,6 @@ function drawNumber() {
     cell.classList.add('drawn');
   }
 
-  // 최근 5개
   const recentNums = Array.from(recentContainer.querySelectorAll('.recent-item')).map(el => el.textContent);
   recentNums.unshift(num);
   if (recentNums.length > 5) recentNums.pop();
@@ -343,8 +353,17 @@ document.addEventListener('click', e => {
 });
 
 resetBtn.onclick = () => {
-  if (!confirm("새 판을 시작합니다. (드로우와 빙고 카운트 초기화)")) return;
-  startNewSession();
+  resetClickCount++;
+
+  if (resetClickCount <= 3) {
+    if (confirm(`전체 초기화 (${resetClickCount}/3) 하시겠습니까?\n(모든 당첨 기록 삭제)`)) {
+      startNewSession(true);
+    }
+  } else {
+    if (confirm("새 판을 시작합니다. (이번 판만 초기화)")) {
+      startNewSession(false);
+    }
+  }
 };
 </script>
 </body>
