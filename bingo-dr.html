@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>빙고 드로우</title>
+  <title>시니어 센터 빙고 드로우</title>
   <style>
     body, html {
       margin: 0;
@@ -26,13 +26,13 @@
       justify-content: center;
       align-items: center;
       padding: 8px;
-      min-width: 0;               /* ← 추가: 과도한 확장 방지 */
+      min-width: 0;
     }
     #board {
       display: grid;
       grid-template-columns: repeat(15, 1fr);
       grid-template-rows: repeat(5, 1fr);
-      gap: 2px;                   /* gap 줄임 */
+      gap: 2px;
       width: 100%;
       height: 100%;
       max-width: 94vw;
@@ -59,46 +59,61 @@
       pointer-events: none;
     }
     #sidebar {
-      width: 180px;               /* ← 220px → 180px로 줄임 */
+      width: 180px;
       background: #111;
       padding: 8px 0;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      gap: 10px;
     }
     #recent {
       flex: 1;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
-      gap: 10px;                  /* gap 줄임 */
-      width: 100%;
+      gap: 8px;
       padding: 0 8px;
-      overflow-y: auto;           /* ← 추가: 내용 많아지면 스크롤 */
+      overflow-y: auto;
     }
     .recent-item {
-      font-size: 2.8rem;          /* ← 3.5rem → 2.8rem으로 줄임 */
+      font-size: 2.6rem;
       font-weight: bold;
       text-align: center;
-      color: #fff;
       background: #222;
-      padding: 12px 0;            /* 패딩 줄임 */
+      padding: 10px 0;
       border-radius: 8px;
     }
-    #reset-btn {
-      margin: 15px auto;
-      padding: 12px 24px;
-      font-size: 1.6rem;
-      font-weight: bold;
-      background: #444;
-      color: white;
-      border: none;
+    .recent-item:first-child {
+      color: #ff0000;           /* 가장 최근 번호 빨강 */
+      background: #330000;
+    }
+    #bingo-count {
+      text-align: center;
+      font-size: 2.2rem;
+      padding: 10px;
+      background: #004400;
       border-radius: 8px;
+      margin: 0 8px;
+    }
+    #mode-display {
+      text-align: center;
+      font-size: 1.6rem;
+      padding: 6px;
+      background: #222;
+      border-radius: 8px;
+      margin: 0 8px;
+    }
+    .mode-btn {
+      font-size: 1.3rem;
+      padding: 8px 16px;
+      margin: 4px;
+      border: none;
+      border-radius: 6px;
+      color: white;
       cursor: pointer;
     }
-    #reset-btn:hover {
-      background: #666;
-    }
+    #btn-on { background: #006600; }
+    #btn-off { background: #444444; }
+    #btn-full { background: #880000; }
     #large-number {
       position: fixed;
       top: 50%;
@@ -112,127 +127,243 @@
       transition: opacity 0.4s;
       z-index: 100;
     }
-
-    /* 아주 좁은 화면 대비 (옵션) */
-    @media (max-width: 900px) {
-      #sidebar { width: 140px; }
-      .recent-item { font-size: 2.2rem; padding: 10px 0; }
-    }
   </style>
 </head>
 <body>
 
+<div id="large-number"></div>
+
 <div id="container">
   <div id="board-area">
     <div id="board"></div>
-    <div id="large-number"></div>
   </div>
 
   <div id="sidebar">
+    <div id="bingo-count">빙고: 0/0</div>
+    <div id="mode-display">현재 모드: OFF</div>
+    <div style="text-align:center; padding:8px;">
+      <button class="mode-btn" id="btn-on">ON</button>
+      <button class="mode-btn" id="btn-off">OFF</button>
+      <button class="mode-btn" id="btn-full">FULL</button>
+    </div>
     <div id="recent"></div>
-    <button id="reset-btn">다시</button>
+    <button id="reset-btn" style="margin:10px auto; padding:10px 30px; font-size:1.4rem; background:#444; color:white; border:none; border-radius:8px; cursor:pointer;">다시 시작</button>
   </div>
 </div>
 
 <script>
-  const board = document.getElementById('board');
-  const recentContainer = document.getElementById('recent');
-  const largeNum = document.getElementById('large-number');
-  const resetBtn = document.getElementById('reset-btn');
-  const drawn = new Set();
-  let numbers = Array.from({length:75}, (_,i) => i+1);
-  let recentNumbers = [];
+const board = document.getElementById('board');
+const recentContainer = document.getElementById('recent');
+const largeNum = document.getElementById('large-number');
+const bingoCountEl = document.getElementById('bingo-count');
+const modeDisplay = document.getElementById('mode-display');
+const resetBtn = document.getElementById('reset-btn');
 
-  // 행별 고정 배치
-  const rowRanges = [
-    Array.from({length:15}, (_,i) => i+1),
-    Array.from({length:15}, (_,i) => i+16),
-    Array.from({length:15}, (_,i) => i+31),
-    Array.from({length:15}, (_,i) => i+46),
-    Array.from({length:15}, (_,i) => i+61)
-  ];
+let allCards = [];
+let playerCards = [];
+let called = new Set();
+let drawn = new Set();              // 오늘 빙고 된 card_id 집합
+let prevBingoCount = 0;             // 이전 빙고 인원 (표시용)
+let currentMode = 'off';
 
-  // 판 생성
+const TODAY = new Date().toDateString();
+const STORAGE_KEY_WON = 'bingo_won_today';
+const STORAGE_KEY_MODE = 'bingo_mode_today';
+
+fetch('cards.json')
+  .then(res => res.json())
+  .then(data => {
+    allCards = data;
+    initGame();
+  })
+  .catch(err => {
+    console.error(err);
+    alert("cards.json 파일을 찾을 수 없습니다.");
+  });
+
+function initGame() {
+  loadSavedData();
+  assignPlayerCards();
+  buildBoard();
+  updateBingoCount();
+  updateModeDisplay();
+}
+
+function loadSavedData() {
+  const savedMode = localStorage.getItem(STORAGE_KEY_MODE);
+  if (savedMode) {
+    const data = JSON.parse(savedMode);
+    if (data.date === TODAY) currentMode = data.mode;
+  }
+
+  const savedWon = localStorage.getItem(STORAGE_KEY_WON);
+  if (savedWon) {
+    const data = JSON.parse(savedWon);
+    if (data.date === TODAY) {
+      drawn = new Set(data.cardIds.map(String));
+    }
+  }
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY_MODE, JSON.stringify({date: TODAY, mode: currentMode}));
+  localStorage.setItem(STORAGE_KEY_WON, JSON.stringify({date: TODAY, cardIds: Array.from(drawn)}));
+}
+
+function assignPlayerCards() {
+  playerCards = [];
+  for (let i = 0; i < 120; i++) {
+    const idx = Math.floor(Math.random() * allCards.length);
+    playerCards.push(idx);
+  }
+}
+
+function buildBoard() {
+  board.innerHTML = '';
   for (let row = 0; row < 5; row++) {
     for (let col = 0; col < 15; col++) {
-      const num = rowRanges[row][col];
+      const num = row * 15 + col + 1;
       const cell = document.createElement('div');
       cell.className = 'cell';
-      cell.dataset.num = num;
       cell.textContent = num;
+      cell.dataset.num = num;
       board.appendChild(cell);
     }
   }
+}
 
-  function drawNumber() {
-    if (drawn.size >= 75) {
-      alert("모든 번호가 나왔습니다!");
-      return;
-    }
+function isBingo(grid, isFull = false) {
+  const calledArr = [...called];
+  const flat = grid.flat().filter(n => n !== "001");
 
-    const idx = Math.floor(Math.random() * numbers.length);
-    const num = numbers[idx];
-    numbers.splice(idx, 1);
-    drawn.add(num);
-
-    const cell = document.querySelector(`.cell[data-num="${num}"]`);
-    if (cell) {
-      const circle = document.createElement('div');
-      circle.className = 'circle';
-      cell.appendChild(circle);
-      cell.classList.add('drawn');
-    }
-
-    recentNumbers.unshift(num);
-    if (recentNumbers.length > 5) recentNumbers.pop();
-
-    recentContainer.innerHTML = '';
-    recentNumbers.forEach(n => {
-      const item = document.createElement('div');
-      item.className = 'recent-item';
-      item.textContent = n;
-      recentContainer.appendChild(item);
-    });
-
-    largeNum.textContent = num;
-    largeNum.style.opacity = '1';
-    setTimeout(() => largeNum.style.opacity = '0', 1800);
+  if (isFull) {
+    return flat.every(n => calledArr.includes(Number(n)));
   }
 
-  resetBtn.addEventListener('click', () => {
-    if (!confirm("처음부터 다시 시작하시겠습니까?")) return;
+  let lines = 0;
+  // 행
+  for (let r of grid) {
+    if (r.every(n => n === "001" || calledArr.includes(Number(n)))) lines++;
+  }
+  // 열
+  for (let c = 0; c < 5; c++) {
+    if (grid.every(r => r[c] === "001" || calledArr.includes(Number(r[c])))) lines++;
+  }
+  // 대각선
+  if (grid.every((r,i) => r[i] === "001" || calledArr.includes(Number(r[i])))) lines++;
+  if (grid.every((r,i) => r[4-i] === "001" || calledArr.includes(Number(r[4-i])))) lines++;
 
-    drawn.clear();
-    numbers = Array.from({length:75}, (_,i) => i+1);
-    recentNumbers = [];
-    recentContainer.innerHTML = '';
+  return lines >= 1;
+}
 
-    document.querySelectorAll('.cell').forEach(cell => {
-      cell.classList.remove('drawn');
-      cell.innerHTML = cell.dataset.num;
-      const circles = cell.querySelectorAll('.circle');
-      circles.forEach(c => c.remove());
-    });
-
-    largeNum.style.opacity = '0';
-  });
-
-  window.addEventListener('keydown', e => {
-    if (e.code === 'Space' || e.key === ' ') {
-      e.preventDefault();
-      drawNumber();
+function updateBingoCount() {
+  let currentCount = 0;
+  playerCards.forEach(idx => {
+    const card = allCards[idx];
+    const isFullMode = currentMode === 'full';
+    if (isBingo(card.grid, isFullMode)) {
+      currentCount++;
+      const cid = String(card.card_id);
+      if (!drawn.has(cid)) {
+        drawn.add(cid);
+        saveData();
+      }
     }
   });
 
-  document.addEventListener('click', e => {
-    if (e.target.id !== 'reset-btn') drawNumber();
-  });
+  // 표시: 현재 / 이전
+  bingoCountEl.textContent = `빙고: ${currentCount}/${prevBingoCount}`;
+  prevBingoCount = currentCount;  // 다음 드로우를 위해 업데이트
+}
 
-  document.addEventListener('touchstart', e => {
-    if (e.target.id !== 'reset-btn') drawNumber();
-  });
+function updateModeDisplay() {
+  modeDisplay.textContent = `현재 모드: ${currentMode.toUpperCase()}`;
+}
 
-  window.focus();
+// 모드 버튼 (플래시 없이 즉시 변경)
+document.getElementById('btn-on').onclick = () => { currentMode = 'on'; saveData(); updateModeDisplay(); };
+document.getElementById('btn-off').onclick = () => { currentMode = 'off'; saveData(); updateModeDisplay(); };
+document.getElementById('btn-full').onclick = () => { currentMode = 'full'; saveData(); updateModeDisplay(); };
+
+// 숫자 뽑기
+function drawNumber() {
+  if (called.size >= 75) return alert("모든 숫자 소진!");
+
+  let candidates = Array.from({length:75}, (_,i)=>i+1).filter(n => !called.has(n));
+
+  if (currentMode === 'on' && drawn.size < allCards.length) {
+    const possible = new Set();
+    playerCards.forEach(idx => {
+      const cid = allCards[idx].card_id;
+      if (!drawn.has(cid)) {
+        allCards[idx].grid.flat().forEach(n => {
+          if (n !== "001" && !called.has(Number(n))) possible.add(Number(n));
+        });
+      }
+    });
+    if (possible.size > 0) candidates = [...possible];
+  }
+  // full 모드는 랜덤 유지 (상품 많아서)
+
+  const num = candidates[Math.floor(Math.random() * candidates.length)];
+  if (!num) return;
+
+  called.add(num);
+
+  const cell = board.querySelector(`[data-num="${num}"]`);
+  if (cell) {
+    const circle = document.createElement('div');
+    circle.className = 'circle';
+    cell.appendChild(circle);
+    cell.classList.add('drawn');
+  }
+
+  // 최근 5개 (최신이 첫 번째 → 빨강)
+  const recentList = recentContainer.querySelectorAll('.recent-item');
+  const recentNums = Array.from(recentList).map(el => el.textContent);
+  recentNums.unshift(num);
+  if (recentNums.length > 5) recentNums.pop();
+
+  recentContainer.innerHTML = recentNums.map((n, i) => 
+    `<div class="recent-item">${n}</div>`
+  ).join('');
+
+  largeNum.textContent = num;
+  largeNum.style.opacity = '1';
+  setTimeout(() => largeNum.style.opacity = '0', 1800);
+
+  updateBingoCount();
+}
+
+// 이벤트
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    drawNumber();
+  }
+});
+
+document.addEventListener('click', e => {
+  if (!['BUTTON'].includes(e.target.tagName)) drawNumber();
+});
+
+resetBtn.onclick = () => {
+  if (!confirm("보드만 초기화합니다. 빙고 누적은 유지됩니다.")) return;
+  called.clear();
+  document.querySelectorAll('.cell').forEach(c => {
+    c.classList.remove('drawn');
+    c.innerHTML = c.dataset.num;
+  });
+  recentContainer.innerHTML = '';
+  updateBingoCount();  // 누적은 그대로
+};
+
+// 시작
+if (allCards.length === 0) {
+  // cards.json 로드 대기
+} else {
+  initGame();
+}
 </script>
 </body>
 </html>
