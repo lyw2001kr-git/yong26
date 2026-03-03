@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>빙고 드로우</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      user-select: none;
+    }
+    #container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+    #board-area {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(15, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 3px;
+      width: 100%;
+      height: 100%;
+      max-width: 95vw;
+      max-height: 95vh;
+      aspect-ratio: 15 / 5;
+    }
+    .cell {
+      background: white;
+      color: black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(2.2rem, 6vw, 6rem); /* 글자 크기 크게 */
+      font-weight: 400; /* 굵기 얇게 */
+      border: 1px solid #333;
+      position: relative;
+      box-sizing: border-box;
+    }
+    .drawn .circle {
+      position: absolute;
+      inset: 6px;
+      border: 6px solid red;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    #sidebar {
+      width: 220px;
+      background: #111;
+      padding: 10px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    #recent {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 15px;
+      width: 100%;
+      padding: 0 10px;
+    }
+    .recent-item {
+      font-size: 3.5rem;
+      font-weight: bold;
+      text-align: center;
+      color: #fff;
+      background: #222;
+      padding: 15px 0;
+      border-radius: 10px;
+    }
+    #reset-btn {
+      margin: 20px auto;
+      padding: 15px 30px;
+      font-size: 1.8rem;
+      font-weight: bold;
+      background: #444;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #reset-btn:hover {
+      background: #666;
+    }
+    #large-number {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 38vw;
+      font-weight: bold;
+      color: red;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+<div id="container">
+  <div id="board-area">
+    <div id="board"></div>
+    <div id="large-number"></div>
+  </div>
+
+  <div id="sidebar">
+    <div id="recent"></div>
+    <button id="reset-btn">다시</button>
+  </div>
+</div>
+
+<script>
+  const board = document.getElementById('board');
+  const recentContainer = document.getElementById('recent');
+  const largeNum = document.getElementById('large-number');
+  const resetBtn = document.getElementById('reset-btn');
+  const drawn = new Set();
+  let numbers = Array.from({length:75}, (_,i) => i+1);
+  let recentNumbers = [];
+
+  // 행별 고정 배치 (가로로 1~15 → 16~30 등)
+  const rowRanges = [
+    Array.from({length:15}, (_,i) => i+1),
+    Array.from({length:15}, (_,i) => i+16),
+    Array.from({length:15}, (_,i) => i+31),
+    Array.from({length:15}, (_,i) => i+46),
+    Array.from({length:15}, (_,i) => i+61)
+  ];
+
+  // 판 생성
+  for (let row = 0; row < 5; row++) {
+    for (let col = 0; col < 15; col++) {
+      const num = rowRanges[row][col];
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.num = num;
+      cell.textContent = num;
+      board.appendChild(cell);
+    }
+  }
+
+  function drawNumber() {
+    if (drawn.size >= 75) {
+      alert("모든 번호가 나왔습니다!");
+      return;
+    }
+
+    const idx = Math.floor(Math.random() * numbers.length);
+    const num = numbers[idx];
+    numbers.splice(idx, 1);
+    drawn.add(num);
+
+    const cell = document.querySelector(`.cell[data-num="${num}"]`);
+    if (cell) {
+      const circle = document.createElement('div');
+      circle.className = 'circle';
+      cell.appendChild(circle);
+      cell.classList.add('drawn');
+    }
+
+    recentNumbers.unshift(num);
+    if (recentNumbers.length > 5) recentNumbers.pop();
+
+    recentContainer.innerHTML = '';
+    recentNumbers.forEach(n => {
+      const item = document.createElement('div');
+      item.className = 'recent-item';
+      item.textContent = n;
+      recentContainer.appendChild(item);
+    });
+
+    largeNum.textContent = num;
+    largeNum.style.opacity = '1';
+    setTimeout(() => largeNum.style.opacity = '0', 1800);
+  }
+
+  // 리셋 버튼 기능
+  resetBtn.addEventListener('click', () => {
+    if (!confirm("처음부터 다시 시작하시겠습니까?")) return;
+
+    drawn.clear();
+    numbers = Array.from({length:75}, (_,i) => i+1);
+    recentNumbers = [];
+    recentContainer.innerHTML = '';
+
+    document.querySelectorAll('.cell').forEach(cell => {
+      cell.classList.remove('drawn');
+      cell.innerHTML = cell.dataset.num;  // 원래 숫자만 남김
+      const circles = cell.querySelectorAll('.circle');
+      circles.forEach(c => c.remove());
+    });
+
+    largeNum.style.opacity = '0';
+  });
+
+  // 이벤트 리스너
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Space' || e.key === ' ') {
+      e.preventDefault();
+      drawNumber();
+    }
+  });
+
+  document.addEventListener('click', e => {
+    if (e.target.id !== 'reset-btn') drawNumber();
+  });
+
+  document.addEventListener('touchstart', e => {
+    if (e.target.id !== 'reset-btn') drawNumber();
+  });
+
+  window.focus();
+</script>
+</body>
+</html>
