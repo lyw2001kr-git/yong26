@@ -3,171 +3,235 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>75볼 빙고 드로우 (Bingo Caller)</title>
+  <title>시니어 센터 빙고 드로우</title>
   <style>
-    body {
+    body, html {
       margin: 0;
       padding: 0;
-      font-family: sans-serif;
-      background: #111;
-      color: #fff;
-      height: 100vh;
+      height: 100%;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
       user-select: none;
     }
     #container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+    #board-area {
       flex: 1;
       display: flex;
-      padding: 1.5vw;
-      gap: 2vw;
-      box-sizing: border-box;
+      justify-content: center;
+      align-items: center;
+      padding: 8px;
+      min-width: 0;
     }
     #board {
-      flex: 7;
       display: grid;
       grid-template-columns: repeat(15, 1fr);
       grid-template-rows: repeat(5, 1fr);
-      gap: 0.6vw;
-      background: #222;
-      padding: 1.5vw;
-      border-radius: 12px;
-      box-shadow: 0 0 30px rgba(0,0,0,0.8);
+      gap: 2px;
+      width: 100%;
+      height: 100%;
+      max-width: 94vw;
+      max-height: 94vh;
+      aspect-ratio: 15 / 5;
     }
     .cell {
-      background: #333;
-      border: 2px solid #555;
-      border-radius: 8px;           /* 평소 살짝 둥근 사각형 */
+      background: white;
+      color: black;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.2vw;
-      font-weight: bold;
-      aspect-ratio: 1 / 1;
-      transition: all 0.5s ease;
-      color: #ddd;
+      font-size: clamp(1.8rem, 5vw, 5rem);
+      font-weight: 400;
+      border: 1px solid #333;
+      position: relative;
+      box-sizing: border-box;
     }
-    .called {
-      background: #c00;
-      border: 4px solid #ff4444;
-      border-radius: 50%;           /* 드로우 시 원형 */
-      color: white;
-      box-shadow: 0 0 25px #f00, inset 0 0 15px #800;
-      transform: scale(1.08);
-      font-size: 2.4vw;
+    .drawn .circle {
+      position: absolute;
+      inset: 5px;
+      border: 5px solid red;
+      border-radius: 50%;
+      pointer-events: none;
     }
-    #side {
-      flex: 3;
+    #sidebar {
+      width: 180px;
+      background: #111;
+      padding: 8px 0;
       display: flex;
       flex-direction: column;
-      gap: 2vh;
+      gap: 10px;
     }
     #recent {
-      background: #1a1a1a;
-      padding: 1.5vh 2vw;
-      border-radius: 10px;
-      min-height: 40vh;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0 8px;
       overflow-y: auto;
     }
-    #recent h2 {
-      margin: 0 0 1vh;
-      color: #ffdddd;
-      text-align: center;
-    }
     .recent-item {
-      font-size: 3.5vw;
-      text-align: center;
-      padding: 1vh 0;
-      border-bottom: 1px solid #444;
-      opacity: 0.6;
-      transition: all 0.5s;
-    }
-    .recent-item:first-child {
-      color: #ff0000;
+      font-size: 2.6rem;
       font-weight: bold;
-      opacity: 1;
-      font-size: 5vw;
-    }
-    #status {
       text-align: center;
-      font-size: 2.8vw;
-      padding: 1vh;
       background: #222;
+      padding: 10px 0;
       border-radius: 8px;
     }
-    #bigcall {
+    #bingo-count {
+      text-align: center;
+      font-size: 1.8rem;
+      padding: 8px;
+      background: #004400;
+      border-radius: 8px;
+      margin: 0 8px;
+    }
+    #mode-display {
+      text-align: center;
+      font-size: 1.6rem;
+      padding: 6px;
+      background: #222;
+      border-radius: 8px;
+      margin: 0 8px;
+    }
+    .mode-btn {
+      font-size: 1.3rem;
+      padding: 8px 16px;
+      margin: 4px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+    }
+    #btn-on { background: #006600; }
+    #btn-off { background: #444444; }
+    #btn-full { background: #880000; }
+    #mode-flash {
+      position: fixed;
+      top: 38%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 10vw;
+      font-weight: bold;
+      text-shadow: 0 0 30px #000;
+      opacity: 0;
+      z-index: 200;
+      pointer-events: none;
+      transition: opacity 0.6s;
+    }
+    #large-number {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 18vw;
-      color: #ff0000;
+      font-size: 35vw;
       font-weight: bold;
-      text-shadow: 0 0 40px #f00, 0 0 80px #800;
+      color: red;
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.6s;
+      transition: opacity 0.4s;
       z-index: 100;
     }
-    #controls {
-      text-align: center;
-      padding: 1vh;
-      font-size: 1.5vw;
-      background: rgba(0,0,0,0.5);
-    }
-    button {
-      font-size: 1.8vw;
-      padding: 0.8vh 2vw;
-      margin: 0 1vw;
-      background: #006600;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    button:hover { background: #008800; }
   </style>
 </head>
 <body>
 
-<div id="bigcall"></div>
+<div id="mode-flash"></div>
+<div id="large-number"></div>
 
 <div id="container">
-  <div id="board"></div>
-
-  <div id="side">
-    <div id="recent">
-      <h2>최근 드로우 (최신 위)</h2>
-      <div id="recent-list"></div>
-    </div>
-    <div id="status">Draws: 0 / 75  |  SPACE 또는 클릭으로 드로우</div>
+  <div id="board-area">
+    <div id="board"></div>
   </div>
-</div>
 
-<div id="controls">
-  <button onclick="toggleFullScreen()">전체화면 (F11)</button>
-  <button onclick="resetGame()">새 게임 시작</button>
+  <div id="sidebar">
+    <div id="bingo-count">빙고: 0 / 120</div>
+    <div id="mode-display">현재 모드: OFF</div>
+    <div style="text-align:center; padding:8px;">
+      <button class="mode-btn" id="btn-on">ON</button>
+      <button class="mode-btn" id="btn-off">OFF</button>
+      <button class="mode-btn" id="btn-full">FULL</button>
+    </div>
+    <div id="recent"></div>
+    <button id="reset-btn" style="margin:10px auto; padding:10px 30px; font-size:1.4rem; background:#444; color:white; border:none; border-radius:8px; cursor:pointer;">다시 시작</button>
+  </div>
 </div>
 
 <script>
 const board = document.getElementById('board');
-const recentList = document.getElementById('recent-list');
-const statusEl = document.getElementById('status');
-const bigcall = document.getElementById('bigcall');
+const recentContainer = document.getElementById('recent');
+const largeNum = document.getElementById('large-number');
+const bingoCountEl = document.getElementById('bingo-count');
+const modeDisplay = document.getElementById('mode-display');
+const modeFlash = document.getElementById('mode-flash');
+const resetBtn = document.getElementById('reset-btn');
 
-let numbers = Array.from({length:75}, (_,i)=>i+1);
-let called = new Set();
-let recent = [];
+let allCards = [];                // cards.json 데이터
+let playerCards = [];             // 120명 플레이어의 card 인덱스 (중복 허용)
+let called = new Set();           // 나온 숫자
+let drawn = new Set();            // drawn 카드 추적 (오늘 기준)
+let currentMode = 'off';          // 'on', 'off', 'full'
 
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
+const TODAY = new Date().toDateString();
+const STORAGE_KEY_WON = 'bingo_won_today';
+const STORAGE_KEY_MODE = 'bingo_mode_today';
+
+// cards.json 불러오기 (같은 폴더에 cards.json 있어야 함)
+fetch('cards.json')
+  .then(res => res.json())
+  .then(data => {
+    allCards = data;
+    initGame();
+  })
+  .catch(err => {
+    console.error(err);
+    alert("cards.json 파일을 찾을 수 없습니다.");
+  });
+
+function initGame() {
+  loadSavedData();
+  assignPlayerCards();
+  buildBoard();
+  updateBingoCount();
+  updateModeDisplay();
+}
+
+function loadSavedData() {
+  // 모드 불러오기
+  const savedMode = localStorage.getItem(STORAGE_KEY_MODE);
+  if (savedMode) {
+    const data = JSON.parse(savedMode);
+    if (data.date === TODAY) currentMode = data.mode;
+  }
+
+  // 당첨된 카드 불러오기
+  const savedWon = localStorage.getItem(STORAGE_KEY_WON);
+  if (savedWon) {
+    const data = JSON.parse(savedWon);
+    if (data.date === TODAY) {
+      drawn = new Set(data.cardIds.map(String));
+    }
   }
 }
 
-function initBoard() {
+function saveData() {
+  localStorage.setItem(STORAGE_KEY_MODE, JSON.stringify({date: TODAY, mode: currentMode}));
+  localStorage.setItem(STORAGE_KEY_WON, JSON.stringify({date: TODAY, cardIds: Array.from(drawn)}));
+}
+
+function assignPlayerCards() {
+  playerCards = [];
+  for (let i = 0; i < 120; i++) {
+    const idx = Math.floor(Math.random() * allCards.length);
+    playerCards.push(idx);
+  }
+}
+
+function buildBoard() {
   board.innerHTML = '';
   for (let row = 0; row < 5; row++) {
     for (let col = 0; col < 15; col++) {
@@ -181,55 +245,111 @@ function initBoard() {
   }
 }
 
-function drawNumber() {
-  if (called.size >= 75) {
-    alert("모든 숫자가 나왔습니다!");
-    return;
+function isBingo(grid, isFull = false) {
+  const calledArr = [...called];
+  let lines = 0;
+
+  // 행
+  for (let r of grid) {
+    if (r.every(n => n === "001" || calledArr.includes(Number(n)))) lines++;
   }
+  // 열
+  for (let c = 0; c < 5; c++) {
+    if (grid.every(r => r[c] === "001" || calledArr.includes(Number(r[c])))) lines++;
+  }
+  // 대각선 \
+  if (grid.every((r,i) => r[i] === "001" || calledArr.includes(Number(r[i])))) lines++;
+  // 대각선 /
+  if (grid.every((r,i) => r[4-i] === "001" || calledArr.includes(Number(r[4-i])))) lines++;
 
-  if (numbers.length === 0) shuffle(numbers);
+  if (isFull) {
+    // 풀카바: 24칸(중앙 제외) 모두 맞춰야 → lines >= 8 정도로 엄격 체크 (실제로는 모든 칸 체크)
+    const flat = grid.flat().filter(n => n !== "001");
+    return flat.every(n => calledArr.includes(Number(n)));
+  }
+  return lines >= 1; // 일반 빙고: 1줄 이상
+}
 
-  const num = numbers.pop();
+function updateBingoCount() {
+  let count = 0;
+  playerCards.forEach(idx => {
+    const card = allCards[idx];
+    const isFullMode = currentMode === 'full';
+    if (isBingo(card.grid, isFullMode)) {
+      count++;
+      if (!drawn.has(card.card_id)) {
+        drawn.add(card.card_id);
+        saveData();
+      }
+    }
+  });
+  bingoCountEl.textContent = `빙고: ${count} / 120`;
+}
+
+function showFlash(text, color = '#ffcc00') {
+  modeFlash.textContent = text;
+  modeFlash.style.color = color;
+  modeFlash.style.opacity = 1;
+  setTimeout(() => modeFlash.style.opacity = 0, 3000);
+}
+
+function updateModeDisplay() {
+  modeDisplay.textContent = `현재 모드: ${currentMode.toUpperCase()}`;
+}
+
+// 모드 버튼
+document.getElementById('btn-on').onclick = () => { currentMode = 'on'; saveData(); updateModeDisplay(); showFlash("ON MODE", "#00ff44"); };
+document.getElementById('btn-off').onclick = () => { currentMode = 'off'; saveData(); updateModeDisplay(); showFlash("OFF MODE", "#aaaaaa"); };
+document.getElementById('btn-full').onclick = () => { currentMode = 'full'; saveData(); updateModeDisplay(); showFlash("FULL MODE", "#ff4444"); };
+
+// 숫자 뽑기
+function drawNumber() {
+  if (called.size >= 75) return alert("모든 숫자 소진!");
+
+  let candidates = Array.from({length:75}, (_,i)=>i+1).filter(n => !called.has(n));
+
+  if (currentMode === 'on' && drawn.size < allCards.length) {
+    // 아직 안 된 카드 우선
+    const possible = new Set();
+    playerCards.forEach(idx => {
+      const cid = allCards[idx].card_id;
+      if (!drawn.has(cid)) {
+        allCards[idx].grid.flat().forEach(n => {
+          if (n !== "001" && !called.has(Number(n))) possible.add(Number(n));
+        });
+      }
+    });
+    if (possible.size > 0) candidates = [...possible];
+  }
+  // full 모드는 특별 우선 없음 (상품 많아서 랜덤 유지 or 필요시 조정)
+
+  const num = candidates[Math.floor(Math.random() * candidates.length)];
+  if (!num) return;
+
   called.add(num);
 
-  // 보드 업데이트
   const cell = board.querySelector(`[data-num="${num}"]`);
-  if (cell) cell.classList.add('called');
+  if (cell) {
+    const circle = document.createElement('div');
+    circle.className = 'circle';
+    cell.appendChild(circle);
+    cell.classList.add('drawn');
+  }
 
-  // 최근 목록 (최대 5개)
+  // 최근
+  const recent = [...recentContainer.children].map(el=>el.textContent);
   recent.unshift(num);
   if (recent.length > 5) recent.pop();
+  recentContainer.innerHTML = recent.map(n=>`<div class="recent-item">${n}</div>`).join('');
 
-  recentList.innerHTML = recent.map((n,i) => `<div class="recent-item">${n}</div>`).join('');
+  largeNum.textContent = num;
+  largeNum.style.opacity = '1';
+  setTimeout(() => largeNum.style.opacity = '0', 1800);
 
-  // 상태 업데이트
-  statusEl.textContent = `Draws: ${called.size} / 75`;
-
-  // 큰 숫자 애니메이션 (2초 동안 표시 후 사라짐)
-  bigcall.textContent = num;
-  bigcall.style.opacity = 1;
-  setTimeout(() => { bigcall.style.opacity = 0; }, 2000);
+  updateBingoCount();
 }
 
-function resetGame() {
-  numbers = Array.from({length:75}, (_,i)=>i+1);
-  called.clear();
-  recent = [];
-  initBoard();
-  recentList.innerHTML = '';
-  statusEl.textContent = 'Draws: 0 / 75';
-  shuffle(numbers);
-}
-
-function toggleFullScreen() {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(err => console.log(err));
-  } else {
-    document.exitFullscreen();
-  }
-}
-
-// 입력 이벤트
+// 이벤트
 window.addEventListener('keydown', e => {
   if (e.code === 'Space') {
     e.preventDefault();
@@ -237,17 +357,25 @@ window.addEventListener('keydown', e => {
   }
 });
 
-window.addEventListener('click', e => {
-  // 버튼 클릭은 제외
-  if (e.target.tagName !== 'BUTTON') {
-    drawNumber();
-  }
+document.addEventListener('click', e => {
+  if (!['BUTTON', 'INPUT'].includes(e.target.tagName)) drawNumber();
 });
 
-// 초기화
-shuffle(numbers);
-initBoard();
-</script>
+resetBtn.onclick = () => {
+  if (!confirm("처음부터 다시 시작하시겠습니까?")) return;
+  called.clear();
+  drawn.clear();
+  recentContainer.innerHTML = '';
+  document.querySelectorAll('.cell').forEach(c => {
+    c.classList.remove('drawn');
+    c.innerHTML = c.dataset.num;
+  });
+  updateBingoCount();
+  saveData();
+};
 
+// 시작
+loadSavedData();
+</script>
 </body>
 </html>
