@@ -113,18 +113,22 @@
       background: #330000;
       opacity: 1;
     }
-    .mode-btn {
+    .mode-btn, .reset-btn, .clear-btn {
       font-size: 1.3rem;
-      padding: 8px 16px;
-      margin: 4px;
+      padding: 10px 20px;
+      margin: 6px auto;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       color: white;
       cursor: pointer;
+      display: block;
+      width: 80%;
     }
     #btn-on { background: #006600; }
     #btn-off { background: #444444; }
     #btn-full { background: #880000; }
+    #reset-btn { background: #555; }
+    #clear-btn { background: #8B0000; } /* 진한 빨강으로 강조 */
     #large-number {
       position: fixed;
       top: 50%;
@@ -158,8 +162,9 @@
       <button class="mode-btn" id="btn-off">OFF</button>
       <button class="mode-btn" id="btn-full">FULL</button>
     </div>
+    <button id="clear-btn">초기화 (전체 리셋)</button>
+    <button id="reset-btn">새 판 시작</button>
     <div id="recent"></div>
-    <button id="reset-btn" style="margin:10px auto; padding:10px 30px; font-size:1.4rem; background:#444; color:white; border:none; border-radius:8px; cursor:pointer;">새 판 시작</button>
   </div>
 </div>
 
@@ -171,14 +176,14 @@ const bingoCountEl = document.getElementById('bingo-count');
 const modeDisplay = document.getElementById('mode-display');
 const statusArea = document.getElementById('status-area');
 const resetBtn = document.getElementById('reset-btn');
+const clearBtn = document.getElementById('clear-btn');
 
 let allCards = [];
 let playerCards = [];
 let called = new Set();
-let wonThisCycle = new Set();   // 전체 사이클 누적 당첨 카드 (100장 채워지면 리셋)
-let wonThisSession = new Set(); // 이번 판 새로 당첨된 카드 (빙고 표시용)
+let wonThisCycle = new Set();   // 전체 사이클 누적 (100장 채워지면 off 전환)
+let wonThisSession = new Set(); // 이번 판 새로 당첨된 카드 (표시용)
 let drawCount = 0;
-let resetClickCount = 0;        // 새 판 버튼 클릭 횟수 (처음 3번은 전체 초기화)
 
 let currentMode = 'off';
 
@@ -190,17 +195,10 @@ fetch('cards.json')
   })
   .catch(err => alert("cards.json 로드 실패: " + err));
 
-function startNewSession(resetAll = false) {
+function startNewSession() {
   called.clear();
   wonThisSession.clear();
   drawCount = 0;
-
-  if (resetAll) {
-    wonThisCycle.clear();
-    resetClickCount = 0;
-    alert("전체 초기화 완료 (새 사이클 시작)");
-  }
-
   assignPlayerCards();
   buildBoard();
   recentContainer.innerHTML = '';
@@ -235,9 +233,7 @@ function isBingo(grid, isFull = false) {
   const calledArr = [...called];
   const flatNonFree = grid.flat().filter(n => n !== "001");
 
-  if (isFull) {
-    return flatNonFree.every(n => calledArr.includes(Number(n)));
-  }
+  if (isFull) return flatNonFree.every(n => calledArr.includes(Number(n)));
 
   let lines = 0;
   for (let r of grid) if (r.every(n => n === "001" || calledArr.includes(Number(n)))) lines++;
@@ -269,7 +265,7 @@ function updateBingoDisplay() {
 
   bingoCountEl.textContent = `빙고: ${newThisDraw}/${wonThisSession.size}`;
 
-  // 100장 모두 당첨 → 자동 off + 알림
+  // 100장 모두 당첨 시 자동 off 전환
   if (wonThisCycle.size >= allCards.length && currentMode !== 'off') {
     currentMode = 'off';
     updateModeDisplay();
@@ -352,17 +348,18 @@ document.addEventListener('click', e => {
   if (e.target.tagName !== 'BUTTON') drawNumber();
 });
 
+// 새 판 시작 (이번 판 초기화)
 resetBtn.onclick = () => {
-  resetClickCount++;
+  if (confirm("새 판을 시작합니다.\n(이번 판 빙고/드로우 초기화)")) {
+    startNewSession();
+  }
+};
 
-  if (resetClickCount <= 3) {
-    if (confirm(`전체 초기화 (${resetClickCount}/3) 하시겠습니까?\n(모든 당첨 기록 삭제)`)) {
-      startNewSession(true);
-    }
-  } else {
-    if (confirm("새 판을 시작합니다. (이번 판만 초기화)")) {
-      startNewSession(false);
-    }
+// 전체 초기화 (모든 당첨 기록 삭제)
+clearBtn.onclick = () => {
+  if (confirm("전체 초기화 하시겠습니까?\n(모든 카드 당첨 기록이 삭제되고 처음부터 시작합니다)")) {
+    wonThisCycle.clear();
+    startNewSession();
   }
 };
 </script>
