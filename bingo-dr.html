@@ -150,7 +150,7 @@
       <button class="mode-btn" id="btn-full">FULL</button>
     </div>
     <div id="recent"></div>
-    <button id="reset-btn" style="margin:10px auto; padding:10px 30px; font-size:1.4rem; background:#444; color:white; border:none; border-radius:8px; cursor:pointer;">다시 시작</button>
+    <button id="reset-btn" style="margin:10px auto; padding:10px 30px; font-size:1.4rem; background:#444; color:white; border:none; border-radius:8px; cursor:pointer;">다시 시작 (새 판)</button>
   </div>
 </div>
 
@@ -163,13 +163,9 @@ const modeDisplay = document.getElementById('mode-display');
 const resetBtn = document.getElementById('reset-btn');
 
 let allCards = [];
-let playerCards = [];
-let called = new Set();
-let totalWonToday = new Set();     // 오늘 빙고/풀카바 된 card_id 누적 (localStorage)
-let currentBingoCount = 0;         // 이번 세션(이번 실행 후) 빙고 된 사람 수
-
-const TODAY = new Date().toDateString();
-const STORAGE_KEY = 'bingo_total_won_today';
+let playerCards = [];           // 이번 판 120명 카드
+let called = new Set();         // 이번 판 나온 숫자
+let wonThisSession = new Set(); // 이번 판에서 빙고/풀카바 된 card_id (중복 제거용)
 
 let currentMode = 'off';
 
@@ -177,37 +173,21 @@ fetch('cards.json')
   .then(res => res.json())
   .then(data => {
     allCards = data;
-    initGame();
+    startNewSession();
   })
   .catch(err => {
     console.error(err);
     alert("cards.json 파일을 찾을 수 없습니다.");
   });
 
-function initGame() {
-  loadTotalWon();
+function startNewSession() {
+  called.clear();
+  wonThisSession.clear();
   assignPlayerCards();
   buildBoard();
+  recentContainer.innerHTML = '';
   updateBingoDisplay();
   updateModeDisplay();
-}
-
-function loadTotalWon() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    const data = JSON.parse(saved);
-    if (data.date === TODAY) {
-      totalWonToday = new Set(data.cardIds.map(String));
-    }
-  }
-  currentBingoCount = 0;
-}
-
-function saveTotalWon() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    date: TODAY,
-    cardIds: Array.from(totalWonToday)
-  }));
 }
 
 function assignPlayerCards() {
@@ -234,12 +214,14 @@ function buildBoard() {
 
 function isBingo(grid, isFull = false) {
   const calledArr = [...called];
-  const flat = grid.flat().filter(n => n !== "001");
+  const flatNonFree = grid.flat().filter(n => n !== "001");
 
   if (isFull) {
-    return flat.every(n => calledArr.includes(Number(n)));
+    // 풀카바: FREE 제외 24칸 모두 맞춰야
+    return flatNonFree.every(n => calledArr.includes(Number(n)));
   }
 
+  // 일반 빙고: 1줄 이상
   let lines = 0;
   for (let r of grid) {
     if (r.every(n => n === "001" || calledArr.includes(Number(n)))) lines++;
@@ -262,25 +244,22 @@ function updateBingoDisplay() {
     const isFullMode = currentMode === 'full';
 
     if (isBingo(card.grid, isFullMode)) {
-      if (!totalWonToday.has(cardId)) {
-        totalWonToday.add(cardId);
+      if (!wonThisSession.has(cardId)) {
+        wonThisSession.add(cardId);
         thisDrawNew++;
-        saveTotalWon();
       }
     }
   });
 
-  currentBingoCount += thisDrawNew;
-  const totalToday = totalWonToday.size;
-
-  bingoCountEl.textContent = `빙고: ${thisDrawNew}/${totalToday}`;
+  const totalThisSession = wonThisSession.size;
+  bingoCountEl.textContent = `빙고: ${thisDrawNew}/${totalThisSession}`;
 }
 
 function updateModeDisplay() {
   modeDisplay.textContent = `현재 모드: ${currentMode.toUpperCase()}`;
 }
 
-// 모드 변경 (팝업 없이)
+// 모드 버튼
 document.getElementById('btn-on').onclick = () => { currentMode = 'on'; updateModeDisplay(); };
 document.getElementById('btn-off').onclick = () => { currentMode = 'off'; updateModeDisplay(); };
 document.getElementById('btn-full').onclick = () => { currentMode = 'full'; updateModeDisplay(); };
@@ -291,17 +270,22 @@ function drawNumber() {
 
   let candidates = Array.from({length:75}, (_,i)=>i+1).filter(n => !called.has(n));
 
-  if (currentMode === 'on' && totalWonToday.size < allCards.length) {
+  // on 또는 full 모드 → 아직 이번 판에서 당첨 안 된 카드 위주
+  if ((currentMode === 'on' || currentMode === 'full') && wonThisSession.size < allCards.length) {
     const possible = new Set();
     playerCards.forEach(idx => {
       const cid = allCards[idx].card_id;
-      if (!totalWonToday.has(cid)) {
+      if (!wonThisSession.has(cid)) {
         allCards[idx].grid.flat().forEach(n => {
-          if (n !== "001" && !called.has(Number(n))) possible.add(Number(n));
+          if (n !== "001" && !called.has(Number(n))) {
+            possible.add(Number(n));
+          }
         });
       }
     });
-    if (possible.size > 0) candidates = [...possible];
+    if (possible.size > 0) {
+      candidates = [...possible];
+    }
   }
 
   const num = candidates[Math.floor(Math.random() * candidates.length)];
@@ -317,7 +301,7 @@ function drawNumber() {
     cell.classList.add('drawn');
   }
 
-  // 최근 5개 업데이트 (최신이 첫 번째, 빨강)
+  // 최근 5개 (최신이 위, 빨강)
   const recentNums = Array.from(recentContainer.querySelectorAll('.recent-item')).map(el => el.textContent);
   recentNums.unshift(num);
   if (recentNums.length > 5) recentNums.pop();
@@ -343,19 +327,9 @@ document.addEventListener('click', e => {
 });
 
 resetBtn.onclick = () => {
-  if (!confirm("보드와 이번 세션 빙고만 초기화합니다. 오늘 총 누적은 유지됩니다.")) return;
-
-  called.clear();
-  currentBingoCount = 0;
-  document.querySelectorAll('.cell').forEach(c => {
-    c.classList.remove('drawn');
-    c.innerHTML = c.dataset.num;
-  });
-  recentContainer.innerHTML = '';
-  updateBingoDisplay();
+  if (!confirm("새 판을 시작합니다. (이번 판 빙고 카운트 초기화)")) return;
+  startNewSession();
 };
-
-// 시작
 </script>
 </body>
 </html>
