@@ -25,17 +25,18 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 10px;
+      padding: 8px;
+      min-width: 0;               /* ← 추가: 과도한 확장 방지 */
     }
     #board {
       display: grid;
       grid-template-columns: repeat(15, 1fr);
       grid-template-rows: repeat(5, 1fr);
-      gap: 3px;
+      gap: 2px;                   /* gap 줄임 */
       width: 100%;
       height: 100%;
-      max-width: 95vw;
-      max-height: 95vh;
+      max-width: 94vw;
+      max-height: 94vh;
       aspect-ratio: 15 / 5;
     }
     .cell {
@@ -44,23 +45,23 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(2.2rem, 6vw, 6rem); /* 글자 크기 크게 */
-      font-weight: 400; /* 굵기 얇게 */
+      font-size: clamp(1.8rem, 5vw, 5rem);
+      font-weight: 400;
       border: 1px solid #333;
       position: relative;
       box-sizing: border-box;
     }
     .drawn .circle {
       position: absolute;
-      inset: 6px;
-      border: 6px solid red;
+      inset: 5px;
+      border: 5px solid red;
       border-radius: 50%;
       pointer-events: none;
     }
     #sidebar {
-      width: 220px;
+      width: 180px;               /* ← 220px → 180px로 줄임 */
       background: #111;
-      padding: 10px 0;
+      padding: 8px 0;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -70,28 +71,29 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      gap: 15px;
+      gap: 10px;                  /* gap 줄임 */
       width: 100%;
-      padding: 0 10px;
+      padding: 0 8px;
+      overflow-y: auto;           /* ← 추가: 내용 많아지면 스크롤 */
     }
     .recent-item {
-      font-size: 3.5rem;
+      font-size: 2.8rem;          /* ← 3.5rem → 2.8rem으로 줄임 */
       font-weight: bold;
       text-align: center;
       color: #fff;
       background: #222;
-      padding: 15px 0;
-      border-radius: 10px;
+      padding: 12px 0;            /* 패딩 줄임 */
+      border-radius: 8px;
     }
     #reset-btn {
-      margin: 20px auto;
-      padding: 15px 30px;
-      font-size: 1.8rem;
+      margin: 15px auto;
+      padding: 12px 24px;
+      font-size: 1.6rem;
       font-weight: bold;
       background: #444;
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
     }
     #reset-btn:hover {
@@ -102,13 +104,19 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 38vw;
+      font-size: 35vw;
       font-weight: bold;
       color: red;
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.4s;
       z-index: 100;
+    }
+
+    /* 아주 좁은 화면 대비 (옵션) */
+    @media (max-width: 900px) {
+      #sidebar { width: 140px; }
+      .recent-item { font-size: 2.2rem; padding: 10px 0; }
     }
   </style>
 </head>
@@ -135,7 +143,7 @@
   let numbers = Array.from({length:75}, (_,i) => i+1);
   let recentNumbers = [];
 
-  // 행별 고정 배치 (가로로 1~15 → 16~30 등)
+  // 행별 고정 배치
   const rowRanges = [
     Array.from({length:15}, (_,i) => i+1),
     Array.from({length:15}, (_,i) => i+16),
@@ -191,7 +199,6 @@
     setTimeout(() => largeNum.style.opacity = '0', 1800);
   }
 
-  // 리셋 버튼 기능
   resetBtn.addEventListener('click', () => {
     if (!confirm("처음부터 다시 시작하시겠습니까?")) return;
 
@@ -202,7 +209,7 @@
 
     document.querySelectorAll('.cell').forEach(cell => {
       cell.classList.remove('drawn');
-      cell.innerHTML = cell.dataset.num;  // 원래 숫자만 남김
+      cell.innerHTML = cell.dataset.num;
       const circles = cell.querySelectorAll('.circle');
       circles.forEach(c => c.remove());
     });
@@ -210,7 +217,6 @@
     largeNum.style.opacity = '0';
   });
 
-  // 이벤트 리스너
   window.addEventListener('keydown', e => {
     if (e.code === 'Space' || e.key === ' ') {
       e.preventDefault();
