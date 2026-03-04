@@ -15,18 +15,17 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: center;
     }
     h1 {
       color: #00ccff;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
     .grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
-      gap: 20px;
+      gap: 18px;
       max-width: 1200px;
-      margin: 0 auto;
+      margin: 0 auto 40px auto;
     }
     .table {
       width: 100%;
@@ -38,12 +37,15 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
+      font-size: 1.0rem;          /* 기본 글자 크기 줄임 */
       font-weight: bold;
       cursor: pointer;
       box-shadow: 0 0 15px rgba(0,0,0,0.6);
       transition: all 0.3s;
       position: relative;
+      padding: 8px;
+      box-sizing: border-box;
+      text-align: center;
     }
     .table:hover {
       transform: scale(1.08);
@@ -51,179 +53,245 @@
     }
     .table .id {
       position: absolute;
-      top: 8px;
-      left: 8px;
-      font-size: 0.9rem;
-      opacity: 0.7;
+      top: 6px;
+      left: 6px;
+      font-size: 0.8rem;
+      opacity: 0.8;
     }
-    .table .name {
-      font-size: 1.4rem;
-      text-align: center;
-      padding: 0 10px;
+    .table .names {
+      font-size: 0.95rem;         /* 여러 이름 나와도 잘 보이게 크기 조정 */
+      line-height: 1.3;
+      max-height: 70%;
       overflow: hidden;
       text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;      /* 최대 4줄까지 표시 */
+      -webkit-box-orient: vertical;
+    }
+    .table.highlight {
+      border: 4px solid #ffff00;
+      box-shadow: 0 0 25px #ffff00;
+      transform: scale(1.1);
     }
 
-    /* 지존 테이블 (1,2,19번) - 크기 1/2 */
-    .vvip {
-      width: 60%;
-      aspect-ratio: 1 / 1;
-      background: #ff6600;
-      font-size: 1.0rem;
-      box-shadow: 0 0 25px #ff9900;
+    /* 검색 입력창 */
+    #search-box {
+      margin: 20px auto;
+      width: 300px;
+      max-width: 90%;
     }
-    .vvip .name {
-      font-size: 1.1rem;
-    }
-    .vvip::after {
-      content: "지존";
-      position: absolute;
-      bottom: 8px;
-      right: 8px;
-      font-size: 0.8rem;
-      background: rgba(255,255,255,0.3);
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-
-    /* 비밀번호 모달 */
-    #pw-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.8);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-    }
-    .modal-box {
-      background: #222;
-      padding: 30px;
-      border-radius: 16px;
-      width: 340px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-    }
-    input[type="password"] {
+    #search-input {
       width: 100%;
       padding: 14px;
-      font-size: 1.4rem;
-      margin: 20px 0;
-      border-radius: 8px;
+      font-size: 1.3rem;
+      border-radius: 10px;
       border: none;
       text-align: center;
-    }
-    .btn-group {
-      display: flex;
-      gap: 15px;
-      justify-content: center;
-    }
-    .btn {
-      padding: 12px 40px;
-      font-size: 1.2rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+      background: #333;
       color: white;
     }
-    .btn-ok { background: #28a745; }
-    .btn-cancel { background: #6c757d; }
+
+    /* 비밀번호 모달은 제거했으므로 필요 없음 */
   </style>
 </head>
 <body>
 
 <h1>임마뉴엘 시니어 센타 테이블 배치</h1>
 
-<div class="grid">
-  <!-- 1행 (id 1~6) -->
-  <div class="table vvip" data-table="1" onclick="checkPassword(1)"><span class="id">1</span><span class="name">이정호</span></div>
-  <div class="table vvip" data-table="2" onclick="checkPassword(2)"><span class="id">2</span><span class="name">김희정</span></div>
-  <div class="table" data-table="3" onclick="checkPassword(3)"><span class="id">3</span><span class="name">오괜환 외</span></div>
-  <div class="table" data-table="4" onclick="checkPassword(4)"><span class="id">4</span><span class="name">이옥희 외</span></div>
-  <div class="table" data-table="5" onclick="checkPassword(5)"><span class="id">5</span><span class="name">김전녀 외</span></div>
-  <div class="table" data-table="6" onclick="checkPassword(6)"><span class="id">6</span><span class="name">김재섭 외</span></div>
-
-  <!-- 2행 (id 7~12) -->
-  <div class="table" data-table="7" onclick="checkPassword(7)"><span class="id">7</span><span class="name">최바울 외</span></div>
-  <div class="table" data-table="8" onclick="checkPassword(8)"><span class="id">8</span><span class="name">황찬석 외</span></div>
-  <div class="table" data-table="9" onclick="checkPassword(9)"><span class="id">9</span><span class="name">정정남 외</span></div>
-  <div class="table" data-table="10" onclick="checkPassword(10)"><span class="id">10</span><span class="name">고광제 외</span></div>
-  <div class="table" data-table="11" onclick="checkPassword(11)"><span class="id">11</span><span class="name">김영순 외</span></div>
-  <div class="table" data-table="12" onclick="checkPassword(12)"><span class="id">12</span><span class="name">박장현 외</span></div>
-
-  <!-- 3행 (id 13~18) -->
-  <div class="table" data-table="13" onclick="checkPassword(13)"><span class="id">13</span><span class="name">우성순 외</span></div>
-  <div class="table" data-table="14" onclick="checkPassword(14)"><span class="id">14</span><span class="name">한명숙 외</span></div>
-  <div class="table" data-table="15" onclick="checkPassword(15)"><span class="id">15</span><span class="name">인장만 외</span></div>
-  <div class="table" data-table="16" onclick="checkPassword(16)"><span class="id">16</span><span class="name">계금옥 외</span></div>
-  <div class="table" data-table="17" onclick="checkPassword(17)"><span class="id">17</span><span class="name">이난곤 외</span></div>
-  <div class="table" data-table="18" onclick="checkPassword(18)"><span class="id">18</span><span class="name">이흥수 외</span></div>
-
-  <!-- 4행 (id 19~24) -->
-  <div class="table vvip" data-table="19" onclick="checkPassword(19)"><span class="id">19</span><span class="name">정순도</span></div>
-  <div class="table" data-table="20" onclick="checkPassword(20)"><span class="id">20</span><span class="name">박의순 외</span></div>
-  <div class="table" data-table="21" onclick="checkPassword(21)"><span class="id">21</span><span class="name">김재정 외</span></div>
-  <div class="table" data-table="22" onclick="checkPassword(22)"><span class="id">22</span><span class="name">이영주 외</span></div>
-  <div class="table" data-table="23" onclick="checkPassword(23)"><span class="id">23</span><span class="name">김판도 외</span></div>
-  <div class="table" data-table="24" onclick="checkPassword(24)"><span class="id">24</span><span class="name">정순자 외</span></div>
-
-  <!-- 5행 (id 25~30) -->
-  <div class="table" data-table="25" onclick="checkPassword(25)"><span class="id">25</span><span class="name">이용상 외</span></div>
-  <div class="table" data-table="26" onclick="checkPassword(26)"><span class="id">26</span><span class="name">강경자 외</span></div>
-  <div class="table" data-table="27" onclick="checkPassword(27)"><span class="id">27</span><span class="name">이희우 외</span></div>
-  <div class="table" data-table="28" onclick="checkPassword(28)"><span class="id">28</span><span class="name">양옥희 외</span></div>
-  <div class="table" data-table="29" onclick="checkPassword(29)"><span class="id">29</span><span class="name">김풍자 외</span></div>
-  <div class="table" data-table="30" onclick="checkPassword(30)"><span class="id">30</span><span class="name">이춘복 외</span></div>
-
-  <!-- 6행 (id 31~36) -->
-  <div class="table" data-table="31" onclick="checkPassword(31)"><span class="id">31</span><span class="name">이정옥 외</span></div>
-  <div class="table" data-table="32" onclick="checkPassword(32)"><span class="id">32</span><span class="name">이영애 외</span></div>
-  <div class="table" data-table="33" onclick="checkPassword(33)"><span class="id">33</span><span class="name">한송자 외</span></div>
-  <div class="table" data-table="34" onclick="checkPassword(34)"><span class="id">34</span><span class="name"></span></div>
-  <div class="table" data-table="35" onclick="checkPassword(35)"><span class="id">35</span><span class="name">곽마이크 외</span></div>
-  <div class="table" data-table="36" onclick="checkPassword(36)"><span class="id">36</span><span class="name"></span></div>
-
-  <!-- 7행 (id 37) -->
-  <div class="table" data-table="37" onclick="checkPassword(37)"><span class="id">37</span><span class="name">정한국 외</span></div>
+<div id="search-box">
+  <input type="text" id="search-input" placeholder="이름 검색 (예: 이정호)" oninput="searchTable()">
 </div>
 
-<!-- 비밀번호 모달 -->
-<div id="pw-modal">
-  <div class="modal-box">
-    <h2>비밀번호 입력</h2>
-    <input type="password" id="pw-input" placeholder="비밀번호 입력" autofocus>
-    <div class="btn-group">
-      <button class="btn btn-ok" onclick="verifyPassword()">확인</button>
-      <button class="btn btn-cancel" onclick="document.getElementById('pw-modal').style.display='none'">취소</button>
-    </div>
+<div class="grid" id="table-grid">
+  <!-- 테이블 1~37개 생성 (6열 × 7행) -->
+  <div class="table" data-table="1" onclick="goToTable(1)">
+    <span class="id">1</span>
+    <div class="names">이정호</div>
+  </div>
+  <div class="table" data-table="2" onclick="goToTable(2)">
+    <span class="id">2</span>
+    <div class="names">김희정</div>
+  </div>
+  <div class="table" data-table="3" onclick="goToTable(3)">
+    <span class="id">3</span>
+    <div class="names">오괜환<br>오명옥<br>남기우<br>남현구<br>방영순</div>
+  </div>
+  <div class="table" data-table="4" onclick="goToTable(4)">
+    <span class="id">4</span>
+    <div class="names">이옥희<br>이옥경<br>이명호</div>
+  </div>
+  <div class="table" data-table="5" onclick="goToTable(5)">
+    <span class="id">5</span>
+    <div class="names">김전녀<br>백창숙<br>이강평<br>김채은</div>
+  </div>
+  <div class="table" data-table="6" onclick="goToTable(6)">
+    <span class="id">6</span>
+    <div class="names">김재섭<br>박강순<br>이숙자<br>윤은주</div>
+  </div>
+
+  <div class="table" data-table="7" onclick="goToTable(7)">
+    <span class="id">7</span>
+    <div class="names">최바울<br>박정숙<br>박재근</div>
+  </div>
+  <div class="table" data-table="8" onclick="goToTable(8)">
+    <span class="id">8</span>
+    <div class="names">황찬석<br>황영자<br>홍명희<br>최홍규</div>
+  </div>
+  <div class="table" data-table="9" onclick="goToTable(9)">
+    <span class="id">9</span>
+    <div class="names">정정남<br>이문자<br>안용신<br>김두영<br>정숙자</div>
+  </div>
+  <div class="table" data-table="10" onclick="goToTable(10)">
+    <span class="id">10</span>
+    <div class="names">고광제<br>안복성<br>정신원<br>안상규<br>주영일</div>
+  </div>
+  <div class="table" data-table="11" onclick="goToTable(11)">
+    <span class="id">11</span>
+    <div class="names">김영순<br>임귀순<br>박은순</div>
+  </div>
+  <div class="table" data-table="12" onclick="goToTable(12)">
+    <span class="id">12</span>
+    <div class="names">박장현<br>김종수</div>
+  </div>
+
+  <!-- 3행 (id 13~18) -->
+  <div class="table" data-table="13" onclick="goToTable(13)">
+    <span class="id">13</span>
+    <div class="names">우성순<br>루시아김<br>송문자<br>황기순</div>
+  </div>
+  <div class="table" data-table="14" onclick="goToTable(14)">
+    <span class="id">14</span>
+    <div class="names">한명숙<br>노희자<br>장정옥<br>홍희자<br>홍명숙<br>손기수</div>
+  </div>
+  <div class="table" data-table="15" onclick="goToTable(15)">
+    <span class="id">15</span>
+    <div class="names">인장만<br>임폴<br>한옥자</div>
+  </div>
+  <div class="table" data-table="16" onclick="goToTable(16)">
+    <span class="id">16</span>
+    <div class="names">계금옥<br>장경자<br>김춘자<br>봉영은<br>레베카김</div>
+  </div>
+  <div class="table" data-table="17" onclick="goToTable(17)">
+    <span class="id">17</span>
+    <div class="names">이난곤<br>김삼례<br>이정기<br>이재순</div>
+  </div>
+  <div class="table" data-table="18" onclick="goToTable(18)">
+    <span class="id">18</span>
+    <div class="names">이흥수<br>김창덕<br>손양선<br>이윤희</div>
+  </div>
+
+  <!-- 4행 (id 19~24) -->
+  <div class="table" data-table="19" onclick="goToTable(19)">
+    <span class="id">19</span>
+    <div class="names">정순도</div>
+  </div>
+  <div class="table" data-table="20" onclick="goToTable(20)">
+    <span class="id">20</span>
+    <div class="names">박의순<br>한고명<br>한현숙<br>박상균</div>
+  </div>
+  <div class="table" data-table="21" onclick="goToTable(21)">
+    <span class="id">21</span>
+    <div class="names">김재정<br>서상경<br>김옥희<br>신순향</div>
+  </div>
+  <div class="table" data-table="22" onclick="goToTable(22)">
+    <span class="id">22</span>
+    <div class="names">이영주<br>손옥희<br>박혜옥<br>이명자<br>최명현</div>
+  </div>
+  <div class="table" data-table="23" onclick="checkPassword(23)">
+    <span class="id">23</span>
+    <div class="names">김판도<br>장영숙<br>이영자<br>김형강</div>
+  </div>
+  <div class="table" data-table="24" onclick="checkPassword(24)">
+    <span class="id">24</span>
+    <div class="names">정순자<br>신무순<br>오경림</div>
+  </div>
+
+  <!-- 5행 (id 25~30) -->
+  <div class="table" data-table="25" onclick="checkPassword(25)">
+    <span class="id">25</span>
+    <div class="names">이용상<br>이양숙<br>최호<br>김원태</div>
+  </div>
+  <div class="table" data-table="26" onclick="checkPassword(26)">
+    <span class="id">26</span>
+    <div class="names">강경자<br>김성숙<br>최평화</div>
+  </div>
+  <div class="table" data-table="27" onclick="checkPassword(27)">
+    <span class="id">27</span>
+    <div class="names">이희우<br>김강숙<br>김만식<br>신경애</div>
+  </div>
+  <div class="table" data-table="28" onclick="checkPassword(28)">
+    <span class="id">28</span>
+    <div class="names">양옥희<br>김정형<br>정문철<br>박복동<br>이명환</div>
+  </div>
+  <div class="table" data-table="29" onclick="checkPassword(29)">
+    <span class="id">29</span>
+    <div class="names">김풍자<br>김경숙<br>엔젤라김<br>테레샤김</div>
+  </div>
+  <div class="table" data-table="30" onclick="checkPassword(30)">
+    <span class="id">30</span>
+    <div class="names">이춘복<br>이숙<br>이수현<br>김방현</div>
+  </div>
+
+  <!-- 6행 (id 31~36) -->
+  <div class="table" data-table="31" onclick="checkPassword(31)">
+    <span class="id">31</span>
+    <div class="names">이정옥<br>명계현<br>이춘자</div>
+  </div>
+  <div class="table" data-table="32" onclick="checkPassword(32)">
+    <span class="id">32</span>
+    <div class="names">이영애<br>김화순<br>김형복<br>이원선</div>
+  </div>
+  <div class="table" data-table="33" onclick="checkPassword(33)">
+    <span class="id">33</span>
+    <div class="names">한송자<br>남은숙<br>기갑분<br>함성분<br>김옥남</div>
+  </div>
+  <div class="table" data-table="34" onclick="checkPassword(34)">
+    <span class="id">34</span>
+    <div class="names"></div>
+  </div>
+  <div class="table" data-table="35" onclick="checkPassword(35)">
+    <span class="id">35</span>
+    <div class="names">곽마이크<br>이문식<br>이경희<br>이상분<br>곽정자</div>
+  </div>
+  <div class="table" data-table="36" onclick="checkPassword(36)">
+    <span class="id">36</span>
+    <div class="names"></div>
+  </div>
+
+  <!-- 7행 (id 37) -->
+  <div class="table" data-table="37" onclick="checkPassword(37)">
+    <span class="id">37</span>
+    <div class="names">정한국<br>황성희<br>김정구<br>정현찬</div>
   </div>
 </div>
 
+<!-- 비밀번호 모달 (필요 없으므로 제거했지만, 나중에 필요하면 되돌릴 수 있음) -->
+
 <script>
-let selectedTable = null;
-
-function checkPassword(tableNum) {
-  selectedTable = tableNum.toString().padStart(2, '0');
-  document.getElementById('pw-modal').style.display = 'flex';
-  document.getElementById('pw-input').value = '';
-  document.getElementById('pw-input').focus();
+// 테이블 클릭 시 바로 상세 페이지로 이동 (비밀번호 제거)
+function goToTable(tableNum) {
+  const padded = tableNum.toString().padStart(2, '0');
+  window.location.href = `table-${padded}.html`;
 }
 
-function verifyPassword() {
-  const input = document.getElementById('pw-input').value.trim();
-  if (input === "000") {
-    document.getElementById('pw-modal').style.display = 'none';
-    window.location.href = `table-${selectedTable}.html`;
-  } else {
-    alert("비밀번호가 틀렸습니다.");
-    document.getElementById('pw-input').value = '';
-  }
+// 이름 검색 기능
+function searchTable() {
+  const input = document.getElementById('search-input').value.trim().toLowerCase();
+  document.querySelectorAll('.table').forEach(table => {
+    const names = table.querySelector('.names').textContent.toLowerCase();
+    if (input === '' || names.includes(input)) {
+      table.classList.add('highlight');
+      if (input !== '') {
+        table.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    } else {
+      table.classList.remove('highlight');
+    }
+  });
 }
 
-// 엔터키로도 확인
-document.getElementById('pw-input').addEventListener('keypress', e => {
-  if (e.key === 'Enter') verifyPassword();
-});
+// 검색 입력창 이벤트
+document.getElementById('search-input').addEventListener('input', searchTable);
 </script>
 
 </body>
