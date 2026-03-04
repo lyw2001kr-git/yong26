@@ -259,7 +259,7 @@ const modalConfirm = document.getElementById('modal-confirm');
 let allCards = [];
 let playerCards = [];
 let called = new Set();
-let wonThisCycle = new Set();   // "001", "002" 같은 문자열로 저장
+let wonThisCycle = new Set();   // "001", "002" 등 문자열로 저장
 let wonThisSession = new Set();
 let drawCount = 0;
 
@@ -338,7 +338,7 @@ function updateBingoDisplay() {
 
   playerCards.forEach(idx => {
     const card = allCards[idx];
-    const cardId = card.card_id;  // "001" 형식 문자열
+    const cardId = card.card_id;
     const isFullMode = currentMode === 'full';
 
     if (isBingo(card.grid, isFullMode)) {
@@ -406,13 +406,18 @@ clearBtn.onclick = () => {
 // 모드 버튼
 document.getElementById('btn-on').onclick = () => { currentMode = 'on'; updateModeDisplay(); };
 document.getElementById('btn-off').onclick = () => { currentMode = 'off'; updateModeDisplay(); };
-document.getElementById('btn-full').onclick = () => { currentMode = 'full'; updateModeDisplay(); };
+document.getElementById('btn-full').onclick = () => { 
+  currentMode = 'full'; 
+  updateModeDisplay(); 
+  alert("FULL 모드 시작!\n아직 풀카바 안 된 카드만 집중적으로 당첨시킵니다.");
+};
 
+// 새 판 시작
 document.getElementById('btn-reset').onclick = () => {
   startNewSession();
 };
 
-// 드로우 함수 (on/full 모드에서 안 된 카드 위주)
+// 드로우 함수 (full 모드에서 안 된 카드만 타겟팅)
 function drawNumber() {
   if (called.size >= 75 || drawCount >= 75) {
     alert("이번 판 모든 숫자(75개)가 나왔습니다!");
@@ -426,9 +431,10 @@ function drawNumber() {
 
   if (currentMode === 'on' || currentMode === 'full') {
     const possible = new Set();
+
     playerCards.forEach(idx => {
       const cid = allCards[idx].card_id;
-      if (!wonThisCycle.has(cid)) {  // 아직 안 된 카드만
+      if (!wonThisCycle.has(cid)) {  // 아직 한 번도 당첨 안 된 카드만
         allCards[idx].grid.flat().forEach(n => {
           const num = Number(n);
           if (n !== "001" && !isNaN(num) && num >= 1 && num <= 75 && !called.has(num)) {
@@ -437,8 +443,13 @@ function drawNumber() {
         });
       }
     });
+
+    // 후보가 있으면 무조건 그 중에서만 뽑기 (타겟팅 극대화)
     if (possible.size > 0) {
       candidates = [...possible];
+    } else if (currentMode === 'full') {
+      // 후보가 없으면 (거의 모든 카드가 풀카바 됐을 때) 메시지
+      alert("현재 풀카바 안 된 카드가 거의 없습니다!\n랜덤으로 전환합니다.");
     }
   }
 
