@@ -190,6 +190,9 @@
       word-break: break-all;
       margin: 15px 0;
       text-align: left;
+      padding: 10px;
+      background: #333;
+      border-radius: 8px;
     }
     #modal-confirm {
       margin-top: 20px;
@@ -261,7 +264,7 @@ const modalConfirm = document.getElementById('modal-confirm');
 let allCards = [];
 let playerCards = [];
 let called = new Set();
-let wonThisCycle = new Set();
+let wonThisCycle = new Set();  // 문자열 ID로 저장
 let wonThisSession = new Set();
 let drawCount = 0;
 
@@ -337,7 +340,7 @@ function updateBingoDisplay() {
 
   playerCards.forEach(idx => {
     const card = allCards[idx];
-    const cardId = String(card.card_id);
+    const cardId = String(card.card_id);  // 문자열로 통일
     const isFullMode = currentMode === 'full';
 
     if (isBingo(card.grid, isFullMode)) {
@@ -375,12 +378,12 @@ function updateModeDisplay() {
   modeDisplay.textContent = `현재 모드: ${currentMode.toUpperCase()}`;
 }
 
-// 모달 닫기 이벤트
+// 모달 닫기
 modalClose.onclick = () => {
   modal.style.display = 'none';
 };
 
-// 모달 확인 (초기화 진행)
+// 모달 확인 및 초기화
 modalConfirm.onclick = () => {
   modal.style.display = 'none';
   wonThisCycle.clear();
@@ -389,7 +392,7 @@ modalConfirm.onclick = () => {
 };
 
 // 초기화 버튼 클릭 → 모달 표시
-clearBtn.onclick = () => {
+clearBtn.addEventListener('click', () => {
   const allCardIds = allCards.map(c => String(c.card_id).padStart(3, '0'));
   const notWon = allCardIds.filter(id => !wonThisCycle.has(id));
 
@@ -400,7 +403,7 @@ clearBtn.onclick = () => {
   }
 
   modal.style.display = 'flex';
-};
+});
 
 // 나머지 버튼 이벤트
 document.getElementById('btn-on').onclick = () => { currentMode = 'on'; updateModeDisplay(); };
@@ -426,7 +429,7 @@ function drawNumber() {
   if ((currentMode === 'on' || currentMode === 'full') && wonThisCycle.size < allCards.length) {
     const possible = new Set();
     playerCards.forEach(idx => {
-      const cid = allCards[idx].card_id;
+      const cid = String(allCards[idx].card_id);
       if (!wonThisCycle.has(cid)) {
         allCards[idx].grid.flat().forEach(n => {
           const num = Number(n);
