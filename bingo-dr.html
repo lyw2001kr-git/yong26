@@ -131,22 +131,21 @@
       z-index: 100;
     }
     #won-this-draw {
-      position: absolute;
-      top: 2vh;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 3vw;
-      color: #ffff00;
-      background: rgba(0,0,0,0.6);
-      padding: 4px 12px;
-      border-radius: 6px;
-      white-space: nowrap;
-      max-width: 80vw;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      pointer-events: none;
-      z-index: 90;
-    }
+  position: absolute;
+  top: 1vh;                    /* 위쪽 여백 조금 더 줄임 */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5vw;            /* 기존 3vw → 1.5vw (절반) */
+  color: #ffff00;
+  padding: 2px 8px;            /* 패딩 줄임 */
+  white-space: nowrap;
+  max-width: 80vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  z-index: 90;
+  background: none;            /* 배경 완전 제거 */
+}
   </style>
 </head>
 <body>
