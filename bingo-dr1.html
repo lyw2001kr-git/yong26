@@ -207,7 +207,7 @@
 <body>
 
 <div id="large-number"></div>
-<div id="won-this-draw">빙고된 카드: 없음</div>
+<div id="won-this-draw"></div>  <!-- 초기 빈 상태 -->
 
 <div id="container">
   <div id="board-area">
@@ -259,7 +259,7 @@ const modalConfirm = document.getElementById('modal-confirm');
 let allCards = [];
 let playerCards = [];
 let called = new Set();
-let wonThisCycle = new Set();   // "001", "002" 등 문자열로 저장
+let wonThisCycle = new Set();
 let wonThisSession = new Set();
 let drawCount = 0;
 
@@ -289,7 +289,7 @@ function startNewSession() {
   assignPlayerCards();
   buildBoard();
   recentContainer.innerHTML = '';
-  wonThisDrawEl.textContent = "빙고된 카드: 없음";
+  wonThisDrawEl.textContent = "";
   updateStatus();
   updateBingoDisplay();
   updateModeDisplay();
@@ -355,10 +355,11 @@ function updateBingoDisplay() {
 
   bingoCountEl.textContent = `빙고: ${newThisDraw}/${wonThisSession.size}`;
 
+  // 빙고된 카드 번호만 콤마로 구분해서 숫자만 표시
   if (wonCardIds.length === 0) {
-    wonThisDrawEl.textContent = "빙고된 카드: 없음";
+    wonThisDrawEl.textContent = "";
   } else {
-    wonThisDrawEl.textContent = "빙고된 카드: " + wonCardIds.join(" ");
+    wonThisDrawEl.textContent = wonCardIds.join(",");
   }
 
   if (wonThisCycle.size >= allCards.length && currentMode !== 'off') {
@@ -409,7 +410,6 @@ document.getElementById('btn-off').onclick = () => { currentMode = 'off'; update
 document.getElementById('btn-full').onclick = () => { 
   currentMode = 'full'; 
   updateModeDisplay(); 
-  // 모달 제거 → 조용히 모드만 변경
 };
 
 // 새 판 시작
@@ -417,7 +417,7 @@ document.getElementById('btn-reset').onclick = () => {
   startNewSession();
 };
 
-// 드로우 함수 (on/full 모드에서 안 된 카드만 집중)
+// 드로우 함수
 function drawNumber() {
   if (called.size >= 75 || drawCount >= 75) {
     alert("이번 판 모든 숫자(75개)가 나왔습니다!");
@@ -432,7 +432,6 @@ function drawNumber() {
   if (currentMode === 'on' || currentMode === 'full') {
     const possible = new Set();
 
-    // 아직 한 번도 당첨 안 된 카드만 대상으로
     playerCards.forEach(idx => {
       const cid = allCards[idx].card_id;
       if (!wonThisCycle.has(cid)) {
@@ -445,12 +444,8 @@ function drawNumber() {
       }
     });
 
-    // 후보가 있으면 무조건 그 중에서만 뽑기 (타겟팅 극대화)
     if (possible.size > 0) {
       candidates = [...possible];
-    } else if (currentMode === 'full') {
-      // 후보가 없으면 메시지 (이미 거의 다 당첨된 경우)
-      alert("현재 풀카바 안 된 카드가 거의 없습니다!\n랜덤으로 전환합니다.");
     }
   }
 
