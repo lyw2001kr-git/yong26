@@ -29,21 +29,102 @@
             text-decoration: none;
             font-size: 1.2em;
             transition: 0.3s;
+            cursor: pointer;
         }
         a:hover { background: #0056b3; }
+
+        /* 비밀번호 모달 스타일 */
+        #pw-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 320px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.3em;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .btn {
+            padding: 10px 24px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-ok { background: #28a745; color: white; }
+        .btn-cancel { background: #6c757d; color: white; }
     </style>
 </head>
 <body>
+
     <h1>목록</h1>
     <ul>
-        <li><a href="table.html">table</a></li>
-        <li><a href="bingo-dr1.html">being</a></li>
+        <li><a onclick="checkPassword('table.html')">table</a></li>
+        <li><a onclick="checkPassword('being-dr1.html')">being</a></li>
     </ul>
+
+    <!-- 비밀번호 입력 모달 -->
+    <div id="pw-modal">
+        <div class="modal-box">
+            <h2>비밀번호 입력</h2>
+            <input type="password" id="pw-input" placeholder="비밀번호 입력" autofocus>
+            <div class="btn-group">
+                <button class="btn btn-ok" onclick="verifyPassword()">확인</button>
+                <button class="btn btn-cancel" onclick="document.getElementById('pw-modal').style.display='none'">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let targetUrl = '';
+
+        function checkPassword(url) {
+            targetUrl = url;
+            document.getElementById('pw-modal').style.display = 'flex';
+            document.getElementById('pw-input').value = '';
+            document.getElementById('pw-input').focus();
+        }
+
+        function verifyPassword() {
+            const input = document.getElementById('pw-input').value.trim();
+            if (input === "000") {
+                document.getElementById('pw-modal').style.display = 'none';
+                window.location.href = targetUrl;
+            } else {
+                alert("비밀번호가 틀렸습니다.");
+                document.getElementById('pw-input').value = '';
+                document.getElementById('pw-input').focus();
+            }
+        }
+
+        // 엔터키로도 확인 가능
+        document.getElementById('pw-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verifyPassword();
+            }
+        });
+    </script>
+
 </body>
-
 </html>
-
-
-
-
-
