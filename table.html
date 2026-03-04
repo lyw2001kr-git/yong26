@@ -7,7 +7,7 @@
   <style>
     body {
       margin: 0;
-      padding: 30px 15px;
+      padding: 20px;
       background: #000;
       color: #fff;
       font-family: Arial, sans-serif;
@@ -19,15 +19,15 @@
     }
     h1 {
       color: #00ccff;
-      margin-bottom: 40px;
-      font-size: 2.5rem;
+      margin-bottom: 30px;
+      font-size: 2.2rem;
     }
     .grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
-      gap: 40px;                   /* 테이블 간격 크게 늘림 */
-      max-width: 1400px;
-      margin: 0 auto 60px auto;
+      gap: 30px;                   /* 간격 넓혀 겹침 방지 */
+      max-width: 1300px;
+      margin: 0 auto 40px auto;
     }
     .table {
       width: 100%;
@@ -41,15 +41,16 @@
       justify-content: center;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 0 20px rgba(0,0,0,0.7);
+      box-shadow: 0 0 15px rgba(0,0,0,0.6);
       transition: all 0.3s;
       position: relative;
-      padding: 20px;
+      padding: 15px;
       box-sizing: border-box;
       text-align: center;
+      transform: scale(1.1);       /* 전체 크기 약간 줄임 (기존 1.3 → 1.1) */
     }
     .table:hover {
-      transform: scale(1.12);
+      transform: scale(1.18);
       background: #0088ff;
       box-shadow: 0 0 30px rgba(0,136,255,0.6);
     }
@@ -61,44 +62,36 @@
       opacity: 0.8;
     }
     .table .names {
-      font-size: 0.9rem;          /* 글자 크기 줄여서 여러 명 다 보이게 */
-      line-height: 1.35;          /* 줄 간격 늘림 */
-      max-height: 85%;
+      font-size: 0.8rem;           /* 글자 크기 줄여서 여러 명 다 보이게 */
+      line-height: 1.4;
+      max-height: 80%;
       overflow: hidden;
       text-overflow: ellipsis;
       display: -webkit-box;
-      -webkit-line-clamp: 12;     /* 최대 12줄까지 표시 (필요시 늘림) */
+      -webkit-line-clamp: 12;      /* 최대 12줄까지 표시 */
       -webkit-box-orient: vertical;
       width: 100%;
       padding: 0 10px;
     }
     .table.highlight {
-      border: 5px solid #ffff00;
-      box-shadow: 0 0 35px #ffff00;
-      transform: scale(1.15);
+      border: 4px solid #ffff00;
+      box-shadow: 0 0 25px #ffff00;
+      transform: scale(1.2);
     }
 
     /* 지존 테이블 (1,2,19번) - 크기 그대로 유지 */
     .vvip {
       transform: scale(1.0);
       background: #ff6600;
-      box-shadow: 0 0 30px #ff9900;
+      box-shadow: 0 0 25px #ff9900;
     }
     .vvip .names {
-      font-size: 1.0rem;          /* 지존은 글자 조금 크게 */
-    }
-
-    /* 일반 테이블 - 크게 */
-    .normal {
-      transform: scale(1.3);      /* 1.3배 크게 (2배는 너무 커서 1.3배로 조정) */
-    }
-    .normal .names {
-      font-size: 0.85rem;         /* 확대됐으니 글자 약간 줄임 */
+      font-size: 0.9rem;
     }
 
     /* 검색 입력창 */
     #search-box {
-      margin: 20px auto 40px auto;
+      margin: 20px auto 30px auto;
       width: 320px;
       max-width: 90%;
     }
@@ -112,6 +105,76 @@
       background: #333;
       color: white;
     }
+
+    /* 테이블 상세 모달 */
+    #table-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .table-modal-content {
+      background: #111;
+      padding: 40px;
+      border-radius: 20px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 0 40px rgba(0,200,255,0.3);
+    }
+    .table-modal-close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 3.5rem;
+      cursor: pointer;
+      color: #ff4444;
+    }
+    .table-modal-title {
+      margin: 0 0 30px;
+      font-size: 2.5rem;
+      color: #00ccff;
+    }
+    .clock-face {
+      position: relative;
+      width: 400px;
+      height: 400px;
+      margin: 0 auto;
+    }
+    .clock-position {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: #004080;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .clock-position.center {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 140px;
+      height: 140px;
+      background: #003366;
+      font-size: 1.4rem;
+    }
+    .pos-12 { top: 0%; left: 50%; transform: translateX(-50%); }
+    .pos-2  { top: 20%; right: 5%; }
+    .pos-4  { top: 70%; right: 5%; }
+    .pos-6  { bottom: 0%; left: 50%; transform: translateX(-50%); }
+    .pos-8  { bottom: 20%; left: 5%; }
+    .pos-10 { top: 70%; left: 5%; }
   </style>
 </head>
 <body>
@@ -124,155 +187,155 @@
 
 <div class="grid" id="table-grid">
   <!-- 1행 (id 1~6) -->
-  <div class="table vvip" data-table="1" onclick="goToTable(1)">
+  <div class="table vvip" data-table="1" onclick="showTableDetail(1)">
     <span class="id">1</span>
     <div class="names">이정호</div>
   </div>
-  <div class="table vvip" data-table="2" onclick="goToTable(2)">
+  <div class="table vvip" data-table="2" onclick="showTableDetail(2)">
     <span class="id">2</span>
     <div class="names">김희정</div>
   </div>
-  <div class="table normal" data-table="3" onclick="goToTable(3)">
+  <div class="table" data-table="3" onclick="showTableDetail(3)">
     <span class="id">3</span>
-    <div class="names">오괜환 오명옥 남기우 남현구 방영순</div>
+    <div class="names">오괜환<br>오명옥<br>남기우<br>남현구<br>방영순</div>
   </div>
-  <div class="table normal" data-table="4" onclick="goToTable(4)">
+  <div class="table" data-table="4" onclick="showTableDetail(4)">
     <span class="id">4</span>
-    <div class="names">이옥희 이옥경 이명호</div>
+    <div class="names">이옥희<br>이옥경<br>이명호</div>
   </div>
-  <div class="table normal" data-table="5" onclick="goToTable(5)">
+  <div class="table" data-table="5" onclick="showTableDetail(5)">
     <span class="id">5</span>
-    <div class="names">김전녀 백창숙 이강평 김채은</div>
+    <div class="names">김전녀<br>백창숙<br>이강평<br>김채은</div>
   </div>
-  <div class="table normal" data-table="6" onclick="goToTable(6)">
+  <div class="table" data-table="6" onclick="showTableDetail(6)">
     <span class="id">6</span>
-    <div class="names">김재섭 박강순 이숙자 윤은주</div>
+    <div class="names">김재섭<br>박강순<br>이숙자<br>윤은주</div>
   </div>
 
   <!-- 2행 (id 7~12) -->
-  <div class="table normal" data-table="7" onclick="goToTable(7)">
+  <div class="table" data-table="7" onclick="showTableDetail(7)">
     <span class="id">7</span>
-    <div class="names">최바울 박정숙 박재근</div>
+    <div class="names">최바울<br>박정숙<br>박재근</div>
   </div>
-  <div class="table normal" data-table="8" onclick="goToTable(8)">
+  <div class="table" data-table="8" onclick="showTableDetail(8)">
     <span class="id">8</span>
-    <div class="names">황찬석 황영자 홍명희 최홍규</div>
+    <div class="names">황찬석<br>황영자<br>홍명희<br>최홍규</div>
   </div>
-  <div class="table normal" data-table="9" onclick="goToTable(9)">
+  <div class="table" data-table="9" onclick="showTableDetail(9)">
     <span class="id">9</span>
-    <div class="names">정정남 이문자 안용신 김두영 정숙자</div>
+    <div class="names">정정남<br>이문자<br>안용신<br>김두영<br>정숙자</div>
   </div>
-  <div class="table normal" data-table="10" onclick="goToTable(10)">
+  <div class="table" data-table="10" onclick="showTableDetail(10)">
     <span class="id">10</span>
-    <div class="names">고광제 안복성 정신원 안상규 주영일</div>
+    <div class="names">고광제<br>안복성<br>정신원<br>안상규<br>주영일</div>
   </div>
-  <div class="table normal" data-table="11" onclick="goToTable(11)">
+  <div class="table" data-table="11" onclick="showTableDetail(11)">
     <span class="id">11</span>
-    <div class="names">김영순 임귀순 박은순</div>
+    <div class="names">김영순<br>임귀순<br>박은순</div>
   </div>
-  <div class="table normal" data-table="12" onclick="goToTable(12)">
+  <div class="table" data-table="12" onclick="showTableDetail(12)">
     <span class="id">12</span>
-    <div class="names">박장현 김종수</div>
+    <div class="names">박장현<br>김종수</div>
   </div>
 
   <!-- 3행 (id 13~18) -->
-  <div class="table normal" data-table="13" onclick="goToTable(13)">
+  <div class="table" data-table="13" onclick="showTableDetail(13)">
     <span class="id">13</span>
-    <div class="names">우성순 루시아김 송문자 황기순</div>
+    <div class="names">우성순<br>루시아김<br>송문자<br>황기순</div>
   </div>
-  <div class="table normal" data-table="14" onclick="goToTable(14)">
+  <div class="table" data-table="14" onclick="showTableDetail(14)">
     <span class="id">14</span>
-    <div class="names">한명숙 노희자 장정옥 홍희자 홍명숙 손기수</div>
+    <div class="names">한명숙<br>노희자<br>장정옥<br>홍희자<br>홍명숙<br>손기수</div>
   </div>
-  <div class="table normal" data-table="15" onclick="goToTable(15)">
+  <div class="table" data-table="15" onclick="showTableDetail(15)">
     <span class="id">15</span>
-    <div class="names">인장만 임폴 한옥자</div>
+    <div class="names">인장만<br>임폴<br>한옥자</div>
   </div>
-  <div class="table normal" data-table="16" onclick="goToTable(16)">
+  <div class="table" data-table="16" onclick="showTableDetail(16)">
     <span class="id">16</span>
-    <div class="names">계금옥 장경자 김춘자 봉영은 레베카김</div>
+    <div class="names">계금옥<br>장경자<br>김춘자<br>봉영은<br>레베카김</div>
   </div>
-  <div class="table normal" data-table="17" onclick="goToTable(17)">
+  <div class="table" data-table="17" onclick="showTableDetail(17)">
     <span class="id">17</span>
-    <div class="names">이난곤 김삼례 이정기 이재순</div>
+    <div class="names">이난곤<br>김삼례<br>이정기<br>이재순</div>
   </div>
-  <div class="table normal" data-table="18" onclick="goToTable(18)">
+  <div class="table" data-table="18" onclick="showTableDetail(18)">
     <span class="id">18</span>
-    <div class="names">이흥수 김창덕 손양선 이윤희</div>
+    <div class="names">이흥수<br>김창덕<br>손양선<br>이윤희</div>
   </div>
 
   <!-- 4행 (id 19~24) -->
-  <div class="table vvip" data-table="19" onclick="goToTable(19)">
+  <div class="table vvip" data-table="19" onclick="showTableDetail(19)">
     <span class="id">19</span>
     <div class="names">정순도</div>
   </div>
-  <div class="table normal" data-table="20" onclick="goToTable(20)">
+  <div class="table" data-table="20" onclick="goToTable(20)">
     <span class="id">20</span>
-    <div class="names">박의순 한고명 한현숙 박상균</div>
+    <div class="names">박의순<br>한고명<br>한현숙<br>박상균</div>
   </div>
-  <div class="table normal" data-table="21" onclick="goToTable(21)">
+  <div class="table" data-table="21" onclick="goToTable(21)">
     <span class="id">21</span>
-    <div class="names">김재정 서상경 김옥희 신순향</div>
+    <div class="names">김재정<br>서상경<br>김옥희<br>신순향</div>
   </div>
-  <div class="table normal" data-table="22" onclick="goToTable(22)">
+  <div class="table" data-table="22" onclick="goToTable(22)">
     <span class="id">22</span>
-    <div class="names">이영주 손옥희 박혜옥 이명자 최명현</div>
+    <div class="names">이영주<br>손옥희<br>박혜옥<br>이명자<br>최명현</div>
   </div>
-  <div class="table normal" data-table="23" onclick="goToTable(23)">
+  <div class="table" data-table="23" onclick="goToTable(23)">
     <span class="id">23</span>
-    <div class="names">김판도 장영숙 이영자 김형강</div>
+    <div class="names">김판도<br>장영숙<br>이영자<br>김형강</div>
   </div>
-  <div class="table normal" data-table="24" onclick="goToTable(24)">
+  <div class="table" data-table="24" onclick="goToTable(24)">
     <span class="id">24</span>
-    <div class="names">정순자 신무순 오경림</div>
+    <div class="names">정순자<br>신무순<br>오경림</div>
   </div>
 
   <!-- 5행 (id 25~30) -->
-  <div class="table normal" data-table="25" onclick="goToTable(25)">
+  <div class="table" data-table="25" onclick="goToTable(25)">
     <span class="id">25</span>
-    <div class="names">이용상 이양숙 최호 김원태</div>
+    <div class="names">이용상<br>이양숙<br>최호<br>김원태</div>
   </div>
-  <div class="table normal" data-table="26" onclick="goToTable(26)">
+  <div class="table" data-table="26" onclick="goToTable(26)">
     <span class="id">26</span>
-    <div class="names">강경자 김성숙 최평화</div>
+    <div class="names">강경자<br>김성숙<br>최평화</div>
   </div>
-  <div class="table normal" data-table="27" onclick="goToTable(27)">
+  <div class="table" data-table="27" onclick="goToTable(27)">
     <span class="id">27</span>
-    <div class="names">이희우 김강숙 김만식 신경애</div>
+    <div class="names">이희우<br>김강숙<br>김만식<br>신경애</div>
   </div>
-  <div class="table normal" data-table="28" onclick="goToTable(28)">
+  <div class="table" data-table="28" onclick="goToTable(28)">
     <span class="id">28</span>
-    <div class="names">양옥희 김정형 정문철 박복동 이명환</div>
+    <div class="names">양옥희<br>김정형<br>정문철<br>박복동<br>이명환</div>
   </div>
-  <div class="table normal" data-table="29" onclick="goToTable(29)">
+  <div class="table" data-table="29" onclick="goToTable(29)">
     <span class="id">29</span>
-    <div class="names">김풍자 김경숙 엔젤라김 테레샤김</div>
+    <div class="names">김풍자<br>김경숙<br>엔젤라김<br>테레샤김</div>
   </div>
-  <div class="table normal" data-table="30" onclick="goToTable(30)">
+  <div class="table" data-table="30" onclick="goToTable(30)">
     <span class="id">30</span>
-    <div class="names">이춘복 이숙 이수현 김방현</div>
+    <div class="names">이춘복<br>이숙<br>이수현<br>김방현</div>
   </div>
 
   <!-- 6행 (id 31~36) -->
-  <div class="table normal" data-table="31" onclick="goToTable(31)">
+  <div class="table" data-table="31" onclick="goToTable(31)">
     <span class="id">31</span>
-    <div class="names">이정옥 명계현 이춘자</div>
+    <div class="names">이정옥<br>명계현<br>이춘자</div>
   </div>
-  <div class="table normal" data-table="32" onclick="goToTable(32)">
+  <div class="table" data-table="32" onclick="goToTable(32)">
     <span class="id">32</span>
-    <div class="names">이영애 김화순 김형복 이원선</div>
+    <div class="names">이영애<br>김화순<br>김형복<br>이원선</div>
   </div>
-  <div class="table normal" data-table="33" onclick="goToTable(33)">
+  <div class="table" data-table="33" onclick="goToTable(33)">
     <span class="id">33</span>
-    <div class="names">한송자 남은숙 기갑분 함성분 김옥남</div>
+    <div class="names">한송자<br>남은숙<br>기갑분<br>함성분<br>김옥남</div>
   </div>
   <div class="table" data-table="34" onclick="goToTable(34)">
     <span class="id">34</span>
     <div class="names"></div>
   </div>
-  <div class="table normal" data-table="35" onclick="goToTable(35)">
+  <div class="table" data-table="35" onclick="goToTable(35)">
     <span class="id">35</span>
-    <div class="names">곽마이크 이문식 이경희 이상분 곽정자</div>
+    <div class="names">곽마이크<br>이문식<br>이경희<br>이상분<br>곽정자</div>
   </div>
   <div class="table" data-table="36" onclick="goToTable(36)">
     <span class="id">36</span>
@@ -282,18 +345,63 @@
   <!-- 7행 (id 37) -->
   <div class="table" data-table="37" onclick="goToTable(37)">
     <span class="id">37</span>
-    <div class="names">정한국 황성희 김정구 정현찬</div>
+    <div class="names">정한국<br>황성희<br>김정구<br>정현찬</div>
+  </div>
+</div>
+
+<!-- 테이블 상세 모달 -->
+<div id="table-modal">
+  <div class="table-modal-content">
+    <span id="table-close">×</span>
+    <h2 id="table-title">Table 00</h2>
+    <div class="clock-face">
+      <div class="clock-position center" id="center-name"></div>
+      <div class="clock-position pos-12" id="pos-12"></div>
+      <div class="clock-position pos-2" id="pos-2"></div>
+      <div class="clock-position pos-4" id="pos-4"></div>
+      <div class="clock-position pos-6" id="pos-6"></div>
+      <div class="clock-position pos-8" id="pos-8"></div>
+      <div class="clock-position pos-10" id="pos-10"></div>
+    </div>
   </div>
 </div>
 
 <script>
-// 테이블 클릭 시 바로 상세 페이지로 이동
-function goToTable(tableNum) {
+// 테이블 클릭 시 모달 열기
+function showTableDetail(tableNum) {
   const padded = tableNum.toString().padStart(2, '0');
-  window.location.href = `table-${padded}.html`;
+  const tableData = getTableData(tableNum); // 테이블 데이터 가져오기
+
+  document.getElementById('table-title').textContent = `Table ${padded}`;
+  document.getElementById('center-name').textContent = "중앙";
+  document.getElementById('pos-12').textContent = tableData["12시"] || "빈 자리";
+  document.getElementById('pos-2').textContent = tableData["2시"] || "빈 자리";
+  document.getElementById('pos-4').textContent = tableData["4시"] || "빈 자리";
+  document.getElementById('pos-6').textContent = tableData["6시"] || "빈 자리";
+  document.getElementById('pos-8').textContent = tableData["8시"] || "빈 자리";
+  document.getElementById('pos-10').textContent = tableData["10시"] || "빈 자리";
+
+  document.getElementById('table-modal').style.display = 'flex';
 }
 
-// 이름 검색 기능 (실시간 강조 + 스크롤)
+// 모달 닫기
+document.getElementById('table-close').onclick = () => {
+  document.getElementById('table-modal').style.display = 'none';
+};
+
+// 테이블 데이터 (실제 members.json 사용 추천, 여기서는 하드코딩 예시)
+function getTableData(tableNum) {
+  const tableData = {
+    1: {"12시":".","2시":".","4시":".","6시":".","8시":".","10시":"이정호"},
+    2: {"12시":".","2시":".","4시":".","6시":".","8시":".","10시":"김희정"},
+    3: {"12시":"오괜환","2시":"오명옥","4시":".","6시":"남기우","8시":"남현구","10시":"방영순"},
+    // ... 나머지 테이블 데이터도 추가 (37개 전부)
+    37: {"12시":".","2시":"정한국","4시":"황성희","6시":".","8시":"김정구","10시":"정현찬"}
+  };
+  return tableData[tableNum] || {};
+}
+
+// 이름 검색 기능
 function searchTable() {
   const input = document.getElementById('search-input').value.trim().toLowerCase();
   document.querySelectorAll('.table').forEach(table => {
@@ -309,7 +417,6 @@ function searchTable() {
   });
 }
 
-// 검색 입력창 이벤트
 document.getElementById('search-input').addEventListener('input', searchTable);
 </script>
 
