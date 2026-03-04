@@ -27,6 +27,7 @@
       align-items: center;
       padding: 8px;
       min-width: 0;
+      position: relative;
     }
     #board {
       display: grid;
@@ -129,11 +130,29 @@
       transition: opacity 0.4s;
       z-index: 100;
     }
+    #won-this-draw {
+      position: absolute;
+      top: 2vh;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 3vw;
+      color: #ffff00;
+      background: rgba(0,0,0,0.6);
+      padding: 4px 12px;
+      border-radius: 6px;
+      white-space: nowrap;
+      max-width: 80vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      pointer-events: none;
+      z-index: 90;
+    }
   </style>
 </head>
 <body>
 
 <div id="large-number"></div>
+<div id="won-this-draw">빙고된 카드: 없음</div>
 
 <div id="container">
   <div id="board-area">
@@ -164,6 +183,7 @@ const largeNum = document.getElementById('large-number');
 const bingoCountEl = document.getElementById('bingo-count');
 const modeDisplay = document.getElementById('mode-display');
 const statusArea = document.getElementById('status-area');
+const wonThisDrawEl = document.getElementById('won-this-draw');
 const resetBtn = document.getElementById('btn-reset');
 const clearBtn = document.getElementById('btn-clear');
 
@@ -176,7 +196,20 @@ let drawCount = 0;
 
 let currentMode = 'off';
 
-// 함수들 먼저 정의 (순서 중요)
+fetch('cards.json')
+  .then(res => {
+    if (!res.ok) throw new Error("cards.json 파일을 찾을 수 없습니다.");
+    return res.json();
+  })
+  .then(data => {
+    allCards = data;
+    startNewSession();
+  })
+  .catch(err => {
+    console.error(err);
+    alert("cards.json 로드 실패: " + err.message + "\n파일이 같은 폴더에 있는지 확인해주세요.");
+  });
+
 function startNewSession() {
   called.clear();
   wonThisSession.clear();
@@ -184,6 +217,7 @@ function startNewSession() {
   assignPlayerCards();
   buildBoard();
   recentContainer.innerHTML = '';
+  wonThisDrawEl.textContent = "빙고된 카드: 없음";
   updateStatus();
   updateBingoDisplay();
   updateModeDisplay();
@@ -228,6 +262,7 @@ function isBingo(grid, isFull = false) {
 
 function updateBingoDisplay() {
   let newThisDraw = 0;
+  let wonCardIds = [];
 
   playerCards.forEach(idx => {
     const card = allCards[idx];
@@ -238,6 +273,7 @@ function updateBingoDisplay() {
       if (!wonThisSession.has(cardId)) {
         wonThisSession.add(cardId);
         newThisDraw++;
+        wonCardIds.push(cardId.padStart(3, '0'));
       }
       if (!wonThisCycle.has(cardId)) {
         wonThisCycle.add(cardId);
@@ -246,6 +282,13 @@ function updateBingoDisplay() {
   });
 
   bingoCountEl.textContent = `빙고: ${newThisDraw}/${wonThisSession.size}`;
+
+  // 이번 드로우에서 새로 된 카드 번호 표시
+  if (wonCardIds.length === 0) {
+    wonThisDrawEl.textContent = "빙고된 카드: 없음";
+  } else {
+    wonThisDrawEl.textContent = "빙고된 카드: " + wonCardIds.join(" ");
+  }
 
   if (wonThisCycle.size >= allCards.length && currentMode !== 'off') {
     currentMode = 'off';
@@ -276,7 +319,7 @@ document.getElementById('btn-clear').onclick = () => {
   startNewSession();
 };
 
-// 드로우
+// 드로우 함수
 function drawNumber() {
   if (called.size >= 75 || drawCount >= 75) {
     alert("이번 판 모든 숫자(75개)가 나왔습니다!");
@@ -340,21 +383,6 @@ window.addEventListener('keydown', e => {
 document.addEventListener('click', e => {
   if (e.target.tagName !== 'BUTTON') drawNumber();
 });
-
-// cards.json 로드 (마지막에 실행)
-fetch('cards.json')
-  .then(res => {
-    if (!res.ok) throw new Error("cards.json 파일을 찾을 수 없습니다.");
-    return res.json();
-  })
-  .then(data => {
-    allCards = data;
-    startNewSession();  // 여기서만 초기화 호출
-  })
-  .catch(err => {
-    console.error(err);
-    alert("cards.json 로드 실패: " + err.message + "\n파일이 같은 폴더에 있는지 확인해주세요.");
-  });
 </script>
 </body>
 </html>
