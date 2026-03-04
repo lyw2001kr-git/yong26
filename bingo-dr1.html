@@ -409,7 +409,7 @@ document.getElementById('btn-off').onclick = () => { currentMode = 'off'; update
 document.getElementById('btn-full').onclick = () => { 
   currentMode = 'full'; 
   updateModeDisplay(); 
-  alert("FULL 모드 시작!\n아직 풀카바 안 된 카드만 집중적으로 당첨시킵니다.");
+  // 모달 제거 → 조용히 모드만 변경
 };
 
 // 새 판 시작
@@ -417,7 +417,7 @@ document.getElementById('btn-reset').onclick = () => {
   startNewSession();
 };
 
-// 드로우 함수 (full 모드에서 안 된 카드만 타겟팅)
+// 드로우 함수 (on/full 모드에서 안 된 카드만 집중)
 function drawNumber() {
   if (called.size >= 75 || drawCount >= 75) {
     alert("이번 판 모든 숫자(75개)가 나왔습니다!");
@@ -432,9 +432,10 @@ function drawNumber() {
   if (currentMode === 'on' || currentMode === 'full') {
     const possible = new Set();
 
+    // 아직 한 번도 당첨 안 된 카드만 대상으로
     playerCards.forEach(idx => {
       const cid = allCards[idx].card_id;
-      if (!wonThisCycle.has(cid)) {  // 아직 한 번도 당첨 안 된 카드만
+      if (!wonThisCycle.has(cid)) {
         allCards[idx].grid.flat().forEach(n => {
           const num = Number(n);
           if (n !== "001" && !isNaN(num) && num >= 1 && num <= 75 && !called.has(num)) {
@@ -448,7 +449,7 @@ function drawNumber() {
     if (possible.size > 0) {
       candidates = [...possible];
     } else if (currentMode === 'full') {
-      // 후보가 없으면 (거의 모든 카드가 풀카바 됐을 때) 메시지
+      // 후보가 없으면 메시지 (이미 거의 다 당첨된 경우)
       alert("현재 풀카바 안 된 카드가 거의 없습니다!\n랜덤으로 전환합니다.");
     }
   }
