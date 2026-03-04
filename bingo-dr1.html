@@ -151,10 +151,8 @@
     #modal {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       background: rgba(0,0,0,0.85);
       z-index: 200;
       justify-content: center;
@@ -174,8 +172,7 @@
     }
     #modal-close {
       position: absolute;
-      top: 10px;
-      right: 15px;
+      top: 10px; right: 15px;
       font-size: 2.5rem;
       cursor: pointer;
       color: #ff4444;
@@ -204,9 +201,7 @@
       border-radius: 8px;
       cursor: pointer;
     }
-    #modal-confirm:hover {
-      background: #008800;
-    }
+    #modal-confirm:hover { background: #008800; }
   </style>
 </head>
 <body>
@@ -264,7 +259,7 @@ const modalConfirm = document.getElementById('modal-confirm');
 let allCards = [];
 let playerCards = [];
 let called = new Set();
-let wonThisCycle = new Set();  // 문자열 "001", "002" 등으로 저장
+let wonThisCycle = new Set();   // "001", "002" 같은 문자열로 저장
 let wonThisSession = new Set();
 let drawCount = 0;
 
@@ -278,7 +273,7 @@ fetch('cards.json')
   .then(data => {
     allCards = data.map(card => ({
       ...card,
-      card_id: String(card.card_id).padStart(3, '0')  // ID를 무조건 3자리 문자열로 변환
+      card_id: String(card.card_id).padStart(3, '0')
     }));
     startNewSession();
   })
@@ -343,7 +338,7 @@ function updateBingoDisplay() {
 
   playerCards.forEach(idx => {
     const card = allCards[idx];
-    const cardId = card.card_id;  // 이미 "001" 형식 문자열
+    const cardId = card.card_id;  // "001" 형식 문자열
     const isFullMode = currentMode === 'full';
 
     if (isBingo(card.grid, isFullMode)) {
@@ -394,10 +389,9 @@ modalConfirm.onclick = () => {
   alert("초기화 완료! 모든 카드 당첨 기록이 지워졌습니다.");
 };
 
-// 초기화 버튼 클릭 → 모달에 **진짜 안 된 카드만** 표시
+// 초기화 버튼 클릭 → 모달 표시
 clearBtn.onclick = () => {
-  // 카드 ID를 모두 3자리 문자열로 통일해서 비교
-  const allCardIds = allCards.map(c => c.card_id);  // 이미 "001" 형식
+  const allCardIds = allCards.map(c => c.card_id);
   const notWon = allCardIds.filter(id => !wonThisCycle.has(id));
 
   if (notWon.length === 0) {
@@ -409,7 +403,7 @@ clearBtn.onclick = () => {
   modal.style.display = 'flex';
 };
 
-// 나머지 버튼 이벤트
+// 모드 버튼
 document.getElementById('btn-on').onclick = () => { currentMode = 'on'; updateModeDisplay(); };
 document.getElementById('btn-off').onclick = () => { currentMode = 'off'; updateModeDisplay(); };
 document.getElementById('btn-full').onclick = () => { currentMode = 'full'; updateModeDisplay(); };
@@ -418,7 +412,7 @@ document.getElementById('btn-reset').onclick = () => {
   startNewSession();
 };
 
-// 드로우 함수
+// 드로우 함수 (on/full 모드에서 안 된 카드 위주)
 function drawNumber() {
   if (called.size >= 75 || drawCount >= 75) {
     alert("이번 판 모든 숫자(75개)가 나왔습니다!");
@@ -430,11 +424,11 @@ function drawNumber() {
 
   let candidates = Array.from({length:75}, (_,i)=>i+1).filter(n => !called.has(n));
 
-  if ((currentMode === 'on' || currentMode === 'full') && wonThisCycle.size < allCards.length) {
+  if (currentMode === 'on' || currentMode === 'full') {
     const possible = new Set();
     playerCards.forEach(idx => {
       const cid = allCards[idx].card_id;
-      if (!wonThisCycle.has(cid)) {
+      if (!wonThisCycle.has(cid)) {  // 아직 안 된 카드만
         allCards[idx].grid.flat().forEach(n => {
           const num = Number(n);
           if (n !== "001" && !isNaN(num) && num >= 1 && num <= 75 && !called.has(num)) {
@@ -443,7 +437,9 @@ function drawNumber() {
         });
       }
     });
-    if (possible.size > 0) candidates = [...possible];
+    if (possible.size > 0) {
+      candidates = [...possible];
+    }
   }
 
   if (candidates.length === 0) return;
