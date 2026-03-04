@@ -264,7 +264,7 @@ const modalConfirm = document.getElementById('modal-confirm');
 let allCards = [];
 let playerCards = [];
 let called = new Set();
-let wonThisCycle = new Set();  // 문자열 ID로 저장
+let wonThisCycle = new Set();  // 문자열 "001", "002" 등으로 저장
 let wonThisSession = new Set();
 let drawCount = 0;
 
@@ -276,7 +276,10 @@ fetch('cards.json')
     return res.json();
   })
   .then(data => {
-    allCards = data;
+    allCards = data.map(card => ({
+      ...card,
+      card_id: String(card.card_id).padStart(3, '0')  // ID를 무조건 3자리 문자열로 변환
+    }));
     startNewSession();
   })
   .catch(err => {
@@ -340,14 +343,14 @@ function updateBingoDisplay() {
 
   playerCards.forEach(idx => {
     const card = allCards[idx];
-    const cardId = String(card.card_id);  // 문자열로 통일
+    const cardId = card.card_id;  // 이미 "001" 형식 문자열
     const isFullMode = currentMode === 'full';
 
     if (isBingo(card.grid, isFullMode)) {
       if (!wonThisSession.has(cardId)) {
         wonThisSession.add(cardId);
         newThisDraw++;
-        wonCardIds.push(cardId.padStart(3, '0'));
+        wonCardIds.push(cardId);
       }
       if (!wonThisCycle.has(cardId)) {
         wonThisCycle.add(cardId);
@@ -391,9 +394,10 @@ modalConfirm.onclick = () => {
   alert("초기화 완료! 모든 카드 당첨 기록이 지워졌습니다.");
 };
 
-// 초기화 버튼 클릭 → 모달 표시
-clearBtn.addEventListener('click', () => {
-  const allCardIds = allCards.map(c => String(c.card_id).padStart(3, '0'));
+// 초기화 버튼 클릭 → 모달에 **진짜 안 된 카드만** 표시
+clearBtn.onclick = () => {
+  // 카드 ID를 모두 3자리 문자열로 통일해서 비교
+  const allCardIds = allCards.map(c => c.card_id);  // 이미 "001" 형식
   const notWon = allCardIds.filter(id => !wonThisCycle.has(id));
 
   if (notWon.length === 0) {
@@ -403,7 +407,7 @@ clearBtn.addEventListener('click', () => {
   }
 
   modal.style.display = 'flex';
-});
+};
 
 // 나머지 버튼 이벤트
 document.getElementById('btn-on').onclick = () => { currentMode = 'on'; updateModeDisplay(); };
@@ -429,7 +433,7 @@ function drawNumber() {
   if ((currentMode === 'on' || currentMode === 'full') && wonThisCycle.size < allCards.length) {
     const possible = new Set();
     playerCards.forEach(idx => {
-      const cid = String(allCards[idx].card_id);
+      const cid = allCards[idx].card_id;
       if (!wonThisCycle.has(cid)) {
         allCards[idx].grid.flat().forEach(n => {
           const num = Number(n);
