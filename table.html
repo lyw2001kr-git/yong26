@@ -2,86 +2,102 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>강당 좌석 배치도 (자동 로드 & 검색)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>강당 좌석 배치도</title>
     <style>
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f7f6; padding: 40px; padding-bottom: 100px; }
-        h2 { text-align: center; color: #2c3e50; }
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f7f6; padding: 10px; padding-bottom: 150px; margin: 0; }
+        h2 { text-align: center; color: #2c3e50; font-size: 1.5rem; margin: 20px 0; }
         
         .hall {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 80px 40px;
-            max-width: 1400px;
-            margin: 40px auto;
+            gap: 75px 23px; 
+            max-width: 1100px; 
+            margin: 0 auto;
         }
+
+        @media (max-width: 1024px) { .hall { grid-template-columns: repeat(3, 1fr); gap: 80px 20px; } }
+        @media (max-width: 480px) { .hall { grid-template-columns: repeat(2, 1fr); gap: 80px 15px; } }
 
         .table-circle {
             position: relative;
-            width: 110px; height: 110px;
-            background: #fff; border: 4px solid #3498db;
+            width: 85px; height: 85px;
+            background: #fff; border: 3px solid #3498db;
             border-radius: 50%; display: flex;
             align-items: center; justify-content: center;
-            transition: all 0.4s ease;
+            margin: 0 auto;
+            transition: all 0.3s ease;
         }
 
-        /* 검색 결과 강조 스타일 */
+        /* 테이블 1, 2, 19번 작게 */
+        .table-small { width: 45px; height: 45px; border-color: #95a5a6; }
+        .table-small .table-number { font-size: 0.8rem; }
+
         .table-circle.highlight {
-            background-color: #f1c40f; /* 노란색 배경 */
+            background-color: #f1c40f;
             border-color: #f39c12;
             transform: scale(1.1);
-            box-shadow: 0 0 20px rgba(241, 196, 15, 0.6);
+            z-index: 50;
         }
 
-        .table-small { width: 80px; height: 80px; border-color: #95a5a6; }
-        .table-number { font-size: 1.4rem; font-weight: bold; color: #2c3e50; }
+        .table-number { font-size: 1.1rem; font-weight: bold; color: #2c3e50; pointer-events: none; }
 
         .spot {
             position: absolute;
-            width: 55px; height: 26px;
-            background: #f8f9fa; border: 1px solid #ced4da;
-            border-radius: 15px; font-size: 11px;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s;
+            font-size: 13px; 
+            font-weight: bold;
+            color: transparent;
+            white-space: nowrap;
+            text-align: center;
         }
 
-        .occupied { background-color: #e74c3c; color: white; border-color: #c0392b; font-weight: bold; }
+        .occupied { color: #333; } 
         
-        /* 찾은 사람 좌석 강조 */
         .spot.found {
-            background-color: #ffd700 !important;
-            color: #000 !important;
-            border: 2px solid #000;
-            transform: scale(1.2);
-            z-index: 10;
+            background-color: #e74c3c !important;
+            color: #fff !important;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 15px;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
 
-        /* 좌석 배치 위치 */
-        .spot:nth-child(2) { top: -35px; left: 50%; transform: translateX(-50%); } 
-        .spot:nth-child(3) { top: -5px; right: -40px; }                            
-        .spot:nth-child(4) { top: 50%; right: -50px; transform: translateY(-50%); } 
-        .spot:nth-child(5) { bottom: -5px; right: -40px; }                         
-        .spot:nth-child(6) { bottom: -35px; left: 50%; transform: translateX(-50%); } 
-        .spot:nth-child(7) { bottom: -5px; left: -40px; }                          
-        .spot:nth-child(8) { top: 50%; left: -50px; transform: translateY(-50%); }  
-        .spot:nth-child(9) { top: -5px; left: -40px; }                             
+        /* 좌석 위치 조정 */
+        .spot:nth-child(2) { top: -22px; left: 50%; transform: translateX(-50%); } 
+        .spot:nth-child(3) { top: 0px; right: -25px; }                            
+        .spot:nth-child(4) { top: 50%; right: -35px; transform: translateY(-50%); } 
+        .spot:nth-child(5) { bottom: 0px; right: -25px; }                         
+        .spot:nth-child(6) { bottom: -22px; left: 50%; transform: translateX(-50%); } 
+        .spot:nth-child(7) { bottom: 0px; left: -25px; }                          
+        .spot:nth-child(8) { top: 50%; left: -35px; transform: translateY(-50%); }  
+        .spot:nth-child(9) { top: 0px; left: -25px; }                             
 
-        /* 하단 검색창 고정 스타일 */
+        /* 안내 문구 스타일 */
+        .layout-note {
+            grid-column: span 2;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #e67e22;
+            font-weight: bold;
+            padding-left: 10px;
+        }
+
+        /* 하단 검색바 */
         .search-container {
             position: fixed; bottom: 0; left: 0; width: 100%;
-            background: #2c3e50; padding: 20px;
-            text-align: center; box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
-            z-index: 100;
+            background: #2c3e50; padding: 25px 0;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.3); z-index: 1000;
         }
         .search-container input {
-            padding: 12px 20px; width: 300px;
-            border-radius: 25px; border: none; font-size: 16px;
-            outline: none;
+            padding: 15px 20px; width: 60%; max-width: 250px;
+            border-radius: 30px 0 0 30px; border: none; font-size: 18px; outline: none;
         }
         .search-container button {
-            padding: 12px 25px; margin-left: 10px;
-            border-radius: 25px; border: none;
-            background: #e74c3c; color: white; font-weight: bold;
-            cursor: pointer;
+            padding: 15px 25px; border-radius: 0 30px 30px 0; border: none;
+            background: #e74c3c; color: white; font-weight: bold; cursor: pointer; font-size: 18px;
         }
     </style>
 </head>
@@ -91,14 +107,12 @@
 
 <div class="hall" id="hall"></div>
 
-<!-- 하단 검색바 -->
 <div class="search-container">
-    <input type="text" id="searchInput" placeholder="찾으실 성함을 입력하세요..." onkeypress="if(event.keyCode==13) findPerson()">
-    <button onclick="findPerson()">검색</button>
+    <input type="text" id="searchInput" placeholder="성함 입력..." onkeypress="if(event.keyCode==13) findPerson()">
+    <button onclick="findPerson()">찾기</button>
 </div>
 
 <script>
-    // 제공해주신 CSV 데이터를 변수에 직접 저장 (자동 로드)
     const rawData = `.,.,.,.,.,이정호
 .,.,.,.,.,김희정
 오괜환,오명옥,.,남기우,남현구,방영순
@@ -133,17 +147,15 @@
 .,이영애,김화순,.,김형복,이원선
 한송자,남은숙,기갑분,.,함성분,김옥남
 .,.,.,.,.,.
-곽마이크,.,이문식,이경희,이상분,곽정자
+곽마이크,.,.,이문식,이경희,이상분,.,곽정자
 .,.,.,.,.,.
-.,정한국,황성희,.,김정구,정현찬`;
+.,정한국,.,황성희,.,김정구,.,정현찬`;
 
     const hall = document.getElementById('hall');
-    const smallTables = [1, 2, 19];
+    const smallTables = [1, 2, 19]; // Fixed: Added table numbers here!
 
-    // 레이아웃 생성 및 데이터 채우기
     function init() {
         const lines = rawData.split('\n');
-        
         for (let i = 1; i <= 37; i++) {
             const table = document.createElement('div');
             table.className = 'table-circle' + (smallTables.includes(i) ? ' table-small' : '');
@@ -155,12 +167,9 @@
             table.appendChild(numDiv);
 
             const names = (lines[i-1] || "").split(',').map(n => n.trim());
-
             for (let j = 1; j <= 8; j++) {
                 const spot = document.createElement('div');
                 spot.className = 'spot';
-                spot.id = `seat-${i}-${j}`;
-                
                 const name = names[j-1];
                 if (name && name !== "." && name !== "") {
                     spot.innerText = name;
@@ -169,14 +178,18 @@
                 table.appendChild(spot);
             }
             hall.appendChild(table);
+
+            if (i === 37) {
+                const note = document.createElement('div');
+                note.className = 'layout-note';
+                note.innerText = "                       뒤쪽에서 본 레이아웃 입니다.";
+                hall.appendChild(note);
+            }
         }
     }
 
-    // 이름 검색 함수
     function findPerson() {
         const keyword = document.getElementById('searchInput').value.trim();
-        
-        // 기존 강조 효과 제거
         document.querySelectorAll('.table-circle').forEach(t => t.classList.remove('highlight'));
         document.querySelectorAll('.spot').forEach(s => s.classList.remove('found'));
 
@@ -188,20 +201,16 @@
                 const parentTable = spot.closest('.table-circle');
                 parentTable.classList.add('highlight');
                 spot.classList.add('found');
-                
-                // 해당 위치로 스크롤 이동
                 if (!found) {
                     parentTable.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     found = true;
                 }
             }
         });
-
-        if (!found) alert("해당 성함을 찾을 수 없습니다.");
+        if (!found) alert("성함을 찾을 수 없습니다.");
     }
 
     init();
 </script>
-
 </body>
 </html>
