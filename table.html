@@ -5,19 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>강당 좌석 배치도</title>
     <style>
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f7f6; padding: 10px; padding-bottom: 150px; margin: 0; }
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f7f6; padding: 10px; padding-bottom: 150px; margin: 0; overflow-x: hidden; }
         h2 { text-align: center; color: #2c3e50; font-size: 1.5rem; margin: 20px 0; }
         
-        .hall {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 75px 23px; 
-            max-width: 1100px; 
-            margin: 0 auto;
+        /* 가로 스크롤 가능하게 변경 */
+        .scroll-wrapper {
+            width: 100%;
+            overflow-x: auto; /* 가로 스크롤 활성화 */
+            padding-bottom: 50px;
+            -webkit-overflow-scrolling: touch;
         }
 
-        @media (max-width: 1024px) { .hall { grid-template-columns: repeat(3, 1fr); gap: 80px 20px; } }
-        @media (max-width: 480px) { .hall { grid-template-columns: repeat(2, 1fr); gap: 80px 15px; } }
+        .hall {
+            display: grid;
+            grid-template-columns: repeat(6, 120px); /* 6열 고정, 각 너비 120px */
+            gap: 80px 25px; 
+            width: max-content; /* 내용물만큼 너비 확장 */
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
 
         .table-circle {
             position: relative;
@@ -29,14 +35,13 @@
             transition: all 0.3s ease;
         }
 
-        /* 테이블 1, 2, 19번 작게 */
         .table-small { width: 45px; height: 45px; border-color: #95a5a6; }
         .table-small .table-number { font-size: 0.8rem; }
 
         .table-circle.highlight {
             background-color: #f1c40f;
             border-color: #f39c12;
-            transform: scale(1.1);
+            transform: scale(1.15);
             z-index: 50;
         }
 
@@ -63,7 +68,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
 
-        /* 좌석 위치 조정 */
+        /* 좌석 위치 */
         .spot:nth-child(2) { top: -22px; left: 50%; transform: translateX(-50%); } 
         .spot:nth-child(3) { top: 0px; right: -25px; }                            
         .spot:nth-child(4) { top: 50%; right: -35px; transform: translateY(-50%); } 
@@ -73,7 +78,6 @@
         .spot:nth-child(8) { top: 50%; left: -35px; transform: translateY(-50%); }  
         .spot:nth-child(9) { top: 0px; left: -25px; }                             
 
-        /* 안내 문구 스타일 */
         .layout-note {
             grid-column: span 2;
             display: flex;
@@ -81,10 +85,9 @@
             font-size: 14px;
             color: #e67e22;
             font-weight: bold;
-            padding-left: 10px;
+            white-space: nowrap;
         }
 
-        /* 하단 검색바 */
         .search-container {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background: #2c3e50; padding: 25px 0;
@@ -105,7 +108,9 @@
 
 <h2>강당 좌석 배치 현황</h2>
 
-<div class="hall" id="hall"></div>
+<div class="scroll-wrapper">
+    <div class="hall" id="hall"></div>
+</div>
 
 <div class="search-container">
     <input type="text" id="searchInput" placeholder="성함 입력..." onkeypress="if(event.keyCode==13) findPerson()">
@@ -147,12 +152,12 @@
 .,이영애,김화순,.,김형복,이원선
 한송자,남은숙,기갑분,.,함성분,김옥남
 .,.,.,.,.,.
-곽마이크,.,.,이문식,이경희,이상분,.,곽정자
+곽마이크,.,이문식,이경희,이상분,곽정자
 .,.,.,.,.,.
-.,정한국,.,황성희,.,김정구,.,정현찬`;
+.,정한국,황성희,.,김정구,정현찬`;
 
     const hall = document.getElementById('hall');
-    const smallTables = [1, 2, 19]; // Fixed: Added table numbers here!
+    const smallTables = [1, 2, 19]; 
 
     function init() {
         const lines = rawData.split('\n');
@@ -182,7 +187,7 @@
             if (i === 37) {
                 const note = document.createElement('div');
                 note.className = 'layout-note';
-                note.innerText = "                       뒤쪽에서 본 레이아웃 입니다.";
+                note.innerText = "← 뒤쪽에서 본 레이아웃 입니다.";
                 hall.appendChild(note);
             }
         }
@@ -202,7 +207,8 @@
                 parentTable.classList.add('highlight');
                 spot.classList.add('found');
                 if (!found) {
-                    parentTable.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // 가로 스크롤을 고려한 정렬
+                    parentTable.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                     found = true;
                 }
             }
