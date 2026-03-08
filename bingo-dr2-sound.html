@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>임마뉴엘 시니어 센타 ~빙고~ </title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      user-select: none;
+    }
+    #container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+    #board-area {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 8px;
+      min-width: 0;
+      position: relative;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(15, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 2px;
+      width: 100%;
+      height: 100%;
+      max-width: 89vw;
+      max-height: 94vh;
+      aspect-ratio: 15 / 5;
+    }
+    .cell {
+      background: white;
+      color: black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.8rem, 5vw, 5rem);
+      font-weight: 400;
+      border: 1px solid #333;
+      position: relative;
+      box-sizing: border-box;
+    }
+    .drawn .circle {
+      position: absolute;
+      inset: 5px;
+      border: 5px solid red;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    #sidebar {
+      width: 180px;
+      background: #111;
+      padding: 8px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 1.1rem;
+    }
+    #status-area, #bingo-count, #mode-display {
+      text-align: center;
+      padding: 8px;
+      background: #222;
+      border-radius: 6px;
+      margin: 0 8px;
+      font-size: 1.3rem;
+    }
+    #bingo-count {
+      font-size: 1.6rem;
+      background: #004400;
+    }
+    #recent {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 0 8px;
+      overflow-y: auto;
+    }
+    .recent-item {
+      font-size: 3.5rem;
+      font-weight: bold;
+      text-align: center;
+      background: #222;
+      padding: 10px 0;
+      border-radius: 8px;
+      opacity: 0.7;
+    }
+    .recent-item:first-child {
+      color: #ff0000;
+      background: #330000;
+      opacity: 1;
+      font-size: 5.0rem;  
+    }
+    .control-btn {
+      font-size: 0.95rem;
+      padding: 10px;
+      margin: 4px 8px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      width: calc(100% - 16px);
+    }
+    #btn-on { background: #006600; }
+    #btn-off { background: #444444; }
+    #btn-full { background: #880000; }
+    #btn-reset { background: #336699; }
+    #btn-clear { background: #8B0000; }
+    #large-number {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 35vw;
+      font-weight: bold;
+      color: red;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s;
+      z-index: 100;
+    }
+    #won-this-draw {
+      position: absolute;
+      top: 1vh;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.6vw;
+      color: #ff7300;
+      padding: 2px 8px;
+      white-space: nowrap;
+      max-width: 80vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      pointer-events: none;
+      z-index: 90;
+      background: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="large-number"></div>
+<div id="won-this-draw"></div>
+
+<div id="container">
+  <div id="board-area">
+    <div id="board"></div>
+  </div>
+
+  <div id="sidebar">
+    <div id="status-area">드로우: 0/75</div>
+    <div id="bingo-count">빙고: 0/0</div>
+    <div id="mode-display">현재 모드: OFF</div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px; padding: 0 8px;">
+      <button class="control-btn" id="btn-clear">V,Rest</button>
+      <button class="control-btn" id="btn-off">OFF</button>
+      <button class="control-btn" id="btn-full">FULL</button>
+      <button class="control-btn" id="btn-on">ON</button>
+      <button class="control-btn" id="btn-reset">새판 시작</button>
+    </div>
+
+    <div id="recent"></div>
+  </div>
+</div>
+
+<!-- 소리 파일 (여기서 경로 확인 필수) -->
+<audio id="drawSound" preload="auto">
+  <source src="sounds/draw.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const board = document.getElementById('board');
+const recentContainer = document.getElementById('recent');
+const largeNum = document.getElementById('large-number');
+const bingoCountEl = document.getElementById('bingo-count');
+const modeDisplay = document.getElementById('mode-display');
+const statusArea = document.getElementById('status-area');
+const wonThisDrawEl = document.getElementById('won-this-draw');
+const resetBtn = document.getElementById('btn-reset');
+const clearBtn = document.getElementById('btn-clear');
+const drawSound = document.getElementById('drawSound');
+
+let allCards = [];
+let playerCards = [];
+let called = new Set();
+let wonThisCycle = new Set();
+let wonThisSession = new Set();
+let drawCount = 0;
+
+let currentMode = 'off';
+
+fetch('cards.json')
+  .then(res => {
+    if (!res.ok) throw new Error("cards.json 파일을 찾을 수 없습니다.");
+    return res.json();
+  })
+  .then(data => {
+    allCards = data.map(card => ({
+      ...card,
+      card_id: String(card.card_id).padStart(3, '0')
+    }));
+    startNewSession();
+  })
+  .catch(err => {
+    console.error(err);
+    alert("cards.json 로드 실패: " + err.message + "\n파일이 같은 폴더에 있는지 확인해주세요.");
+  });
+
+function startNewSession() {
+  called.clear();
+  wonThisSession.clear();
+  drawCount = 0;
+  assignPlayerCards();
+  buildBoard();
+  recentContainer.innerHTML = '';
+  wonThisDrawEl.textContent = "";
+  updateStatus();
+  updateBingoDisplay();
+  updateModeDisplay();
+}
+
+function assignPlayerCards() {
+  playerCards = [];
+  for (let i = 0; i < 120; i++) {
+    const idx = Math.floor(Math.random() * allCards.length);
+    playerCards.push(idx);
+  }
+}
+
+function buildBoard() {
+  board.innerHTML = '';
+  for (let row = 0; row < 5; row++) {
+    for (let col = 0; col < 15; col++) {
+      const num = row * 15 + col + 1;
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.textContent = num;
+      cell.dataset.num = num;
+      board.appendChild(cell);
+    }
+  }
+}
+
+function isBingo(grid, isFull = false) {
+  const calledArr = [...called];
+  const flatNonFree = grid.flat().filter(n => n !== "001");
+
+  if (isFull) return flatNonFree.every(n => calledArr.includes(Number(n)));
+
+  let lines = 0;
+  for (let r of grid) if (r.every(n => n === "001" || calledArr.includes(Number(n)))) lines++;
+  for (let c = 0; c < 5; c++) if (grid.every(r => r[c] === "001" || calledArr.includes(Number(r[c])))) lines++;
+  if (grid.every((r,i) => r[i] === "001" || calledArr.includes(Number(r[i])))) lines++;
+  if (grid.every((r,i) => r[4-i] === "001" || calledArr.includes(Number(r[4-i])))) lines++;
+
+  return lines >= 1;
+}
+
+function updateBingoDisplay() {
+  let newThisDraw = 0;
+  let wonCardIds = [];
+
+  playerCards.forEach(idx => {
+    const card = allCards[idx];
+    const cardId = card.card_id;
+    const isFullMode = currentMode === 'full';
+
+    if (isBingo(card.grid, isFullMode)) {
+      if (!wonThisSession.has(cardId)) {
+        wonThisSession.add(cardId);
+        newThisDraw++;
+        wonCardIds.push(cardId);
+      }
+      if (!wonThisCycle.has(cardId)) {
+        wonThisCycle.add(cardId);
+      }
+    }
+  });
+
+  bingoCountEl.textContent = `빙고: ${newThisDraw}/${wonThisSession.size}`;
+
+  if (wonCardIds.length === 0) {
+    wonThisDrawEl.textContent = "";
+  } else {
+    wonThisDrawEl.textContent = wonCardIds.join(",");
+  }
+
+  if (wonThisCycle.size >= allCards.length && currentMode !== 'off') {
+    currentMode = 'off';
+    updateModeDisplay();
+    alert("100장 카드가 모두 최소 1번 당첨되었습니다.\n자동으로 OFF 모드로 전환합니다.");
+  }
+}
+
+function updateStatus() {
+  statusArea.textContent = `드로우: ${drawCount}/75`;
+}
+
+function updateModeDisplay() {
+  modeDisplay.textContent = `현재 모드: ${currentMode.toUpperCase()}`;
+}
+
+// 초기화 버튼 클릭 → 모달 표시
+clearBtn.onclick = () => {
+  const allCardIds = allCards.map(c => c.card_id);
+  const notWon = allCardIds.filter(id => !wonThisCycle.has(id));
+
+  if (notWon.length === 0) {
+    alert("모든 카드가 이미 당첨되었습니다.\n초기화해도 변화가 없을 수 있습니다.");
+  } else {
+    alert("빙고 안 된 카드 번호 목록:\n" + notWon.join(" "));
+  }
+
+  wonThisCycle.clear();
+  startNewSession();
+};
+
+// 모드 버튼
+document.getElementById('btn-on').onclick = () => { currentMode = 'on'; updateModeDisplay(); };
+document.getElementById('btn-off').onclick = () => { currentMode = 'off'; updateModeDisplay(); };
+document.getElementById('btn-full').onclick = () => { currentMode = 'full'; updateModeDisplay(); };
+
+// 새 판 시작
+document.getElementById('btn-reset').onclick = () => {
+  startNewSession();
+};
+
+// 드로우 함수 (소리 재생 추가)
+function drawNumber() {
+  if (called.size >= 75 || drawCount >= 75) {
+    alert("이번 판 모든 숫자(75개)가 나왔습니다!");
+    return;
+  }
+
+  drawCount++;
+  updateStatus();
+
+  let candidates = Array.from({length:75}, (_,i)=>i+1).filter(n => !called.has(n));
+
+  if (currentMode === 'on' || currentMode === 'full') {
+    const possible = new Set();
+
+    playerCards.forEach(idx => {
+      const cid = allCards[idx].card_id;
+      if (!wonThisCycle.has(cid)) {
+        allCards[idx].grid.flat().forEach(n => {
+          const num = Number(n);
+          if (n !== "001" && !isNaN(num) && num >= 1 && num <= 75 && !called.has(num)) {
+            possible.add(num);
+          }
+        });
+      }
+    });
+
+    if (possible.size > 0) {
+      candidates = [...possible];
+    }
+  }
+
+  if (candidates.length === 0) return;
+
+  const num = candidates[Math.floor(Math.random() * candidates.length)];
+  called.add(num);
+
+  const cell = board.querySelector(`[data-num="${num}"]`);
+  if (cell) {
+    const circle = document.createElement('div');
+    circle.className = 'circle';
+    cell.appendChild(circle);
+    cell.classList.add('drawn');
+  }
+
+  const recentNums = Array.from(recentContainer.querySelectorAll('.recent-item')).map(el => el.textContent);
+  recentNums.unshift(num);
+  if (recentNums.length > 5) recentNums.pop();
+  recentContainer.innerHTML = recentNums.map(n => `<div class="recent-item">${n}</div>`).join('');
+
+  largeNum.textContent = num;
+  largeNum.style.opacity = '1';
+  setTimeout(() => largeNum.style.opacity = '0', 1800);
+
+  // 숫자별 소리 재생 (여기서 실행!)
+  const sound = new Audio(`sounds/${num}.mp3`);
+  sound.play().catch(e => console.log("소리 재생 실패:", e));
+
+  updateBingoDisplay();
+}
+
+// 이벤트 리스너
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    drawNumber();
+  }
+});
+
+document.addEventListener('click', e => {
+  if (e.target.tagName !== 'BUTTON') drawNumber();
+});
+</script>
+</body>
+</html>
