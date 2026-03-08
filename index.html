@@ -1,132 +1,134 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나의 홈페이지</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            background: #f8f9fa;
-            margin: 0;
-            padding: 40px;
-            text-align: center;
-        }
-        h1 { color: #333; }
-        ul {
-            list-style: none;
-            padding: 0;
-            max-width: 400px;
-            margin: 40px auto;
-        }
-        li { margin: 20px 0; }
-        a {
-            display: block;
-            background: #007bff;
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 1.2em;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-        a:hover { background: #0056b3; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        /* 비밀번호 모달 스타일 */
-        #pw-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-box {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            width: 320px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-        }
-        input[type="password"] {
-            width: 100%;
-            padding: 12px;
-            font-size: 1.3em;
-            margin: 15px 0;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-        .btn {
-            padding: 10px 24px;
-            font-size: 1.1em;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        .btn-ok { background: #28a745; color: white; }
-        .btn-cancel { background: #6c757d; color: white; }
-    </style>
+<title>기사 정보</title>
+
+<style>
+
+body{
+font-family:'Malgun Gothic',sans-serif;
+background:#f4f7f6;
+margin:0;
+padding:20px;
+text-align:center;
+}
+
+h1{
+color:#2c3e50;
+margin-bottom:40px;
+}
+
+.menu{
+max-width:400px;
+margin:auto;
+}
+
+button{
+width:100%;
+padding:18px;
+margin:10px 0;
+font-size:18px;
+border:none;
+border-radius:12px;
+cursor:pointer;
+font-weight:bold;
+color:white;
+}
+
+.btn1{background:#3498db}
+.btn2{background:#27ae60}
+.btn3{background:#e67e22}
+.btn4{background:#9b59b6}
+
+button:hover{
+opacity:0.85;
+}
+
+</style>
 </head>
+
 <body>
 
-    <h1>목록</h1>
-    <ul>
-        <li><a onclick="checkPassword('table.html')">table</a></li>
-        <li><a onclick="checkPassword('bingo-dr1.html')">being</a></li>
-    </ul>
+<h1>기사 정보</h1>
 
-    <!-- 비밀번호 입력 모달 -->
-    <div id="pw-modal">
-        <div class="modal-box">
-            <h2>비밀번호 입력</h2>
-            <input type="password" id="pw-input" placeholder="비밀번호 입력" autofocus>
-            <div class="btn-group">
-                <button class="btn btn-ok" onclick="verifyPassword()">확인</button>
-                <button class="btn btn-cancel" onclick="document.getElementById('pw-modal').style.display='none'">취소</button>
-            </div>
-        </div>
-    </div>
+<div class="menu">
 
-    <script>
-        let targetUrl = '';
+<button class="btn1" onclick="checkAttendance()">출석 체크</button>
 
-        function checkPassword(url) {
-            targetUrl = url;
-            document.getElementById('pw-modal').style.display = 'flex';
-            document.getElementById('pw-input').value = '';
-            document.getElementById('pw-input').focus();
-        }
+<button class="btn2" onclick="checkTable()">자석 배치</button>
 
-        function verifyPassword() {
-            const input = document.getElementById('pw-input').value.trim();
-            if (input === "000") {
-                document.getElementById('pw-modal').style.display = 'none';
-                window.location.href = targetUrl;
-            } else {
-                alert("비밀번호가 틀렸습니다.");
-                document.getElementById('pw-input').value = '';
-                document.getElementById('pw-input').focus();
-            }
-        }
+<button class="btn3" onclick="checkBingo()">빙고 드로</button>
 
-        // 엔터키로도 확인 가능
-        document.getElementById('pw-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                verifyPassword();
-            }
-        });
-    </script>
+<button class="btn4" onclick="checkTel()">기사 전번</button>
+
+</div>
+
+<script>
+
+async function checkAttendance(){
+
+let pass=prompt("비밀번호 입력")
+
+if(pass==="000"){
+location.href="in-check.html"
+}else{
+alert("비밀번호 틀림")
+}
+
+}
+
+async function checkBingo(){
+
+let pass=prompt("비밀번호 입력")
+
+if(pass==="111"){
+location.href="bingo.html"
+}else{
+alert("비밀번호 틀림")
+}
+
+}
+
+async function checkTable(){
+
+let pass=prompt("전화번호 뒤 4자리")
+
+const res=await fetch("tel.json")
+
+const users=await res.json()
+
+const ok=users.find(u=>u.password===pass)
+
+if(ok){
+location.href="table.html"
+}else{
+alert("권한 없음")
+}
+
+}
+
+async function checkTel(){
+
+let pass=prompt("전화번호 뒤 4자리")
+
+const res=await fetch("tel.json")
+
+const users=await res.json()
+
+const ok=users.find(u=>u.password===pass)
+
+if(ok){
+location.href="dr-tel.html"
+}else{
+alert("권한 없음")
+}
+
+}
+
+</script>
 
 </body>
-
 </html>
-
