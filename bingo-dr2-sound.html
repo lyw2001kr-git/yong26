@@ -393,7 +393,7 @@ function drawNumber() {
   setTimeout(() => largeNum.style.opacity = '0', 1800);
 
   // 숫자별 소리 재생 (여기서 실행!)
-  const sound = new Audio(`sounds/${num}.mp3`);
+  const sound = new Audio(`main/sounds/${num}.mp3`);
   sound.play().catch(e => console.log("소리 재생 실패:", e));
 
   updateBingoDisplay();
@@ -412,4 +412,5 @@ document.addEventListener('click', e => {
 });
 </script>
 </body>
+
 </html>
