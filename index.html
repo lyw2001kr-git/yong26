@@ -73,7 +73,7 @@ async function checkAttendance(){
 let pass=prompt("비밀번호 입력")
 
 if(pass==="000"){
-location.href="in-check.html"
+location.href="ch-table.html"
 }else{
 alert("비밀번호 틀림")
 }
@@ -103,7 +103,7 @@ const users=await res.json()
 const ok=users.find(u=>u.password===pass)
 
 if(ok){
-location.href="table.html"
+location.href="ch-table1.html"
 }else{
 alert("권한 없음")
 }
