@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>임마뉴엘 시니어 센터 빙고</title>
+
+<style>
+
+body,html{
+margin:0;
+padding:0;
+height:100%;
+overflow:hidden;
+background:black;
+font-family:Arial;
+}
+
+#container{
+display:flex;
+height:100vh;
+}
+
+/* 보드 */
+
+#board{
+flex:1;
+display:grid;
+grid-template-columns:repeat(15,1fr);
+grid-template-rows:repeat(5,1fr);
+gap:2px;
+padding:10px;
+}
+
+.cell{
+background:white;
+color:black;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:4vw;
+border:1px solid #333;
+position:relative;
+}
+
+.circle{
+position:absolute;
+inset:5px;
+border:6px solid red;
+border-radius:50%;
+}
+
+/* 사이드 */
+
+#sidebar{
+width:200px;
+background:#111;
+display:flex;
+flex-direction:column;
+padding:10px;
+gap:10px;
+color:white;
+}
+
+#status,#mode,#bingo-count{
+background:#222;
+padding:10px;
+text-align:center;
+border-radius:6px;
+}
+
+#bingo-count{
+background:#004400;
+font-size:1.5rem;
+}
+
+button{
+padding:10px;
+border:none;
+border-radius:6px;
+color:white;
+cursor:pointer;
+}
+
+#btn-on{background:#006600;}
+#btn-off{background:#444;}
+#btn-full{background:#880000;}
+#btn-reset{background:#336699;}
+
+#recent{
+flex:1;
+display:flex;
+flex-direction:column;
+gap:6px;
+}
+
+.recent-item{
+background:#222;
+font-size:3rem;
+text-align:center;
+padding:6px;
+border-radius:6px;
+opacity:.7;
+}
+
+.recent-item:first-child{
+color:red;
+font-size:4rem;
+opacity:1;
+}
+
+/* 중앙 큰 숫자 */
+
+#large-number{
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:32vw;
+font-weight:bold;
+color:red;
+text-shadow:0 0 20px red;
+display:none;
+z-index:9999;
+pointer-events:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="large-number"></div>
+
+<div id="container">
+
+<div id="board"></div>
+
+<div id="sidebar">
+
+<div id="status">드로우:0/75</div>
+<div id="bingo-count">빙고:0</div>
+<div id="mode">모드:OFF</div>
+
+<button id="btn-off">OFF</button>
+<button id="btn-on">ON</button>
+<button id="btn-full">FULL</button>
+<button id="btn-reset">새판</button>
+
+<div id="recent"></div>
+
+</div>
+</div>
+
+<script>
+
+const board=document.getElementById("board")
+const large=document.getElementById("large-number")
+const recentBox=document.getElementById("recent")
+const status=document.getElementById("status")
+const bingoCount=document.getElementById("bingo-count")
+const modeDisplay=document.getElementById("mode")
+
+let called=new Set()
+let drawCount=0
+let mode="off"
+
+let cards=[]
+let playerCards=[]
+let wonCards=new Set()
+
+/* 카드 로드 */
+
+fetch("cards.json")
+.then(r=>r.json())
+.then(data=>{
+cards=data
+startGame()
+})
+
+/* 게임 시작 */
+
+function startGame(){
+
+called.clear()
+drawCount=0
+wonCards.clear()
+
+playerCards=[]
+
+for(let i=0;i<120;i++){
+
+const idx=Math.floor(Math.random()*cards.length)
+
+playerCards.push(idx)
+
+}
+
+buildBoard()
+
+recentBox.innerHTML=""
+
+updateStatus()
+
+}
+
+/* 보드 만들기 */
+
+function buildBoard(){
+
+board.innerHTML=""
+
+for(let i=1;i<=75;i++){
+
+const cell=document.createElement("div")
+
+cell.className="cell"
+cell.dataset.num=i
+cell.innerText=i
+
+board.appendChild(cell)
+
+}
+
+}
+
+/* 번호 드로우 */
+
+function drawNumber(){
+
+if(drawCount>=75)return
+
+let candidates=[]
+
+for(let i=1;i<=75;i++){
+
+if(!called.has(i))candidates.push(i)
+
+}
+
+if(candidates.length===0)return
+
+const num=candidates[Math.floor(Math.random()*candidates.length)]
+
+called.add(num)
+
+drawCount++
+
+updateStatus()
+
+markBoard(num)
+
+showLarge(num)
+
+updateRecent(num)
+
+playSound(num)
+
+checkBingo()
+
+}
+
+/* 보드 표시 */
+
+function markBoard(num){
+
+const cell=document.querySelector(`[data-num="${num}"]`)
+
+if(!cell)return
+
+const circle=document.createElement("div")
+
+circle.className="circle"
+
+cell.appendChild(circle)
+
+}
+
+/* 중앙 숫자 */
+
+function showLarge(num){
+
+large.innerText=num
+
+large.style.display="block"
+
+setTimeout(()=>{
+
+large.style.display="none"
+
+},2000)
+
+}
+
+/* 최근 번호 */
+
+function updateRecent(num){
+
+let arr=[num]
+
+document.querySelectorAll(".recent-item").forEach(el=>{
+
+arr.push(el.innerText)
+
+})
+
+arr=arr.slice(0,5)
+
+recentBox.innerHTML=""
+
+arr.forEach(n=>{
+
+const d=document.createElement("div")
+
+d.className="recent-item"
+
+d.innerText=n
+
+recentBox.appendChild(d)
+
+})
+
+}
+
+/* 소리 */
+
+function playSound(num){
+
+const url=`https://lyw2001kr-git.github.io/yong26/${num}.mp3`
+
+const audio=new Audio(url)
+
+audio.play().catch(e=>console.log("sound error",e))
+
+}
+
+/* 상태 */
+
+function updateStatus(){
+
+status.innerText=`드로우:${drawCount}/75`
+
+}
+
+/* 빙고 체크 */
+
+function checkBingo(){
+
+playerCards.forEach(idx=>{
+
+const card=cards[idx]
+
+const id=card.card_id
+
+if(wonCards.has(id))return
+
+if(isBingo(card.grid)){
+
+wonCards.add(id)
+
+}
+
+})
+
+bingoCount.innerText=`빙고:${wonCards.size}`
+
+}
+
+/* 빙고 계산 */
+
+function isBingo(grid){
+
+const arr=[...called]
+
+for(let r of grid){
+
+if(r.every(n=>n==="001"||arr.includes(Number(n))))return true
+
+}
+
+for(let c=0;c<5;c++){
+
+let ok=true
+
+for(let r=0;r<5;r++){
+
+let n=grid[r][c]
+
+if(!(n==="001"||arr.includes(Number(n))))ok=false
+
+}
+
+if(ok)return true
+
+}
+
+return false
+
+}
+
+/* 키보드 */
+
+document.addEventListener("keydown",e=>{
+
+if(e.code==="Space"){
+
+e.preventDefault()
+
+drawNumber()
+
+}
+
+})
+
+/* 클릭 */
+
+document.addEventListener("click",e=>{
+
+if(e.target.tagName!=="BUTTON")drawNumber()
+
+})
+
+/* 버튼 */
+
+document.getElementById("btn-on").onclick=()=>{
+
+mode="on"
+modeDisplay.innerText="모드:ON"
+
+}
+
+document.getElementById("btn-off").onclick=()=>{
+
+mode="off"
+modeDisplay.innerText="모드:OFF"
+
+}
+
+document.getElementById("btn-full").onclick=()=>{
+
+mode="full"
+modeDisplay.innerText="모드:FULL"
+
+}
+
+document.getElementById("btn-reset").onclick=()=>{
+
+startGame()
+
+}
+
+</script>
+
+</body>
+</html>
