@@ -4,21 +4,24 @@
 <meta charset="UTF-8">
 <title>임마뉴엘 시니어 센터 빙고</title>
 <style>
-  body,html{margin:0;padding:0;height:100%;background:black;font-family:Arial;overflow:hidden;}
-  #container{display:flex;height:100vh;}
-  #board{flex:1;display:grid;grid-template-columns:repeat(15,1fr);grid-template-rows:repeat(5,1fr);gap:2px;padding:10px;}
-  .cell{background:white;color:black;display:flex;align-items:center;justify-content:center;font-size:4vw;border:1px solid #333;position:relative;}
-  .circle{position:absolute;inset:5px;border:6px solid red;border-radius:50%;}
-  #sidebar{width:200px;background:#111;display:flex;flex-direction:column;padding:10px;gap:10px;color:white;}
-  #status,#mode,#bingo-count{background:#222;padding:10px;text-align:center;border-radius:6px;}
-  #bingo-count{background:#004400;font-size:1.4rem;}
-  button{padding:10px;border:none;border-radius:6px;color:white;cursor:pointer;}
-  #btn-on{background:#006600;} #btn-off{background:#444;} #btn-full{background:#880000;} #btn-reset{background:#336699;}
-  #recent{flex:1;display:flex;flex-direction:column;gap:6px;}
-  .recent-item{background:#222;font-size:3rem;text-align:center;padding:6px;border-radius:6px;opacity:.7;}
-  .recent-item:first-child{color:red;font-size:4rem;opacity:1;}
-  #large-number{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:32vw;font-weight:bold;color:red;display:none;z-index:9999;pointer-events:none;}
-  #won-this-draw{position:fixed;top:10px;left:50%;transform:translateX(-50%);font-size:2vw;color:#ffdd00;font-weight:bold;z-index:5000;white-space:nowrap;background:rgba(0,0,0,0.4);padding:4px 12px;border-radius:6px;}
+body,html{margin:0;padding:0;height:100%;background:black;font-family:Arial;overflow:hidden;}
+#container{display:flex;height:100vh;}
+/* 보드 */
+#board{flex:1;display:grid;grid-template-columns:repeat(15,1fr);grid-template-rows:repeat(5,1fr);gap:2px;padding:10px;}
+.cell{background:white;color:black;display:flex;align-items:center;justify-content:center;font-size:4vw;border:1px solid #333;position:relative;}
+.circle{position:absolute;inset:5px;border:6px solid red;border-radius:50%;}
+/* 사이드 */
+#sidebar{width:220px;background:#111;display:flex;flex-direction:column;padding:10px;gap:10px;color:white;}
+#status,#mode,#bingo-count{background:#222;padding:10px;text-align:center;border-radius:6px;}
+#bingo-count{background:#004400;font-size:1.4rem;}
+button{padding:10px;border:none;border-radius:6px;color:white;cursor:pointer;}
+#btn-on{background:#006600;} #btn-off{background:#444;} #btn-full{background:#880000;} #btn-reset{background:#336699;}
+#btn-sound{background:#aa5500;}
+#recent{flex:1;display:flex;flex-direction:column;gap:6px;overflow-y:auto;}
+.recent-item{background:#222;font-size:3rem;text-align:center;padding:6px;border-radius:6px;opacity:.7;}
+.recent-item:first-child{color:red;font-size:4rem;opacity:1;}
+#large-number{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:32vw;font-weight:bold;color:red;display:none;z-index:9999;pointer-events:none;}
+#won-this-draw{position:fixed;top:10px;left:50%;transform:translateX(-50%);font-size:2vw;color:#ffdd00;font-weight:bold;z-index:5000;white-space:nowrap;background:rgba(0,0,0,0.4);padding:4px 12px;border-radius:6px;}
 </style>
 </head>
 <body>
@@ -27,17 +30,20 @@
 <div id="won-this-draw"></div>
 
 <div id="container">
-  <div id="board"></div>
-  <div id="sidebar">
-    <div id="status">드로우:0/75</div>
-    <div id="bingo-count">빙고:0/0</div>
-    <div id="mode">모드:OFF</div>
-    <button id="btn-off">OFF</button>
-    <button id="btn-on">ON</button>
-    <button id="btn-full">FULL</button>
-    <button id="btn-reset">새판</button>
-    <div id="recent"></div>
-  </div>
+
+<div id="board"></div>
+
+<div id="sidebar">
+  <div id="status">드로우:0/75</div>
+  <div id="bingo-count">빙고:0/0</div>
+  <div id="mode">모드:OFF</div>
+  <button id="btn-off">OFF</button>
+  <button id="btn-on">ON</button>
+  <button id="btn-full">FULL</button>
+  <button id="btn-reset">새판</button>
+  <button id="btn-sound">사운드: OFF</button>
+  <div id="recent"></div>
+</div>
 </div>
 
 <script>
@@ -48,17 +54,15 @@ const status=document.getElementById("status")
 const bingoCount=document.getElementById("bingo-count")
 const modeDisplay=document.getElementById("mode")
 const wonDisplay=document.getElementById("won-this-draw")
+const soundBtn=document.getElementById("btn-sound")
 
 let called=new Set()
 let drawCount=0
 let mode="off"
+let soundEnabled=false
 let cards=[]
 let playerCards=[]
 let wonSession=new Set()
-
-// 사운드 관련
-let soundEnabled = false
-let ssKeyCount = 0
 
 // 카드 로드
 fetch("cards.json")
@@ -204,17 +208,9 @@ function isBingo(grid){
 // 이벤트
 document.addEventListener("keydown",e=>{
   if(e.code==="Space"){ e.preventDefault(); drawNumber() }
-  if(e.key.toLowerCase()==="s"){
-    ssKeyCount++
-    if(ssKeyCount%2===0){
-      soundEnabled=!soundEnabled
-      alert(`사운드 ${soundEnabled?"ON":"OFF"}`)
-    }
-  }
 })
 
 document.addEventListener("click",e=>{
-  if(!soundEnabled) soundEnabled=true
   if(e.target.tagName!=="BUTTON") drawNumber()
 })
 
@@ -223,6 +219,13 @@ document.getElementById("btn-on").onclick=()=>{mode="on";modeDisplay.innerText="
 document.getElementById("btn-off").onclick=()=>{mode="off";modeDisplay.innerText="모드:OFF"}
 document.getElementById("btn-full").onclick=()=>{mode="full";modeDisplay.innerText="모드:FULL"}
 document.getElementById("btn-reset").onclick=()=>{startGame()}
+
+// 사운드 버튼
+soundBtn.onclick=()=>{
+  soundEnabled=!soundEnabled
+  soundBtn.innerText=`사운드: ${soundEnabled?"ON":"OFF"}`
+}
+
 </script>
 
 </body>
