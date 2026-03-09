@@ -58,7 +58,7 @@ opacity:0.85;
 
 <button class="btn1" onclick="checkAttendance()">출석 체크</button>
 
-<button class="btn2" onclick="checkTable()">자석 배치</button>
+<button class="btn2" onclick="checkTable()">좌석 배치</button>
 
 <button class="btn3" onclick="checkBingo()">빙고 드로</button>
 
@@ -85,7 +85,7 @@ async function checkBingo(){
 let pass=prompt("비밀번호 입력")
 
 if(pass==="111"){
-location.href="bingo-dr2-sound-ch.html"
+location.href="ch-sound-last.html"
 }else{
 alert("비밀번호 틀림")
 }
@@ -103,7 +103,7 @@ const users=await res.json()
 const ok=users.find(u=>u.password===pass)
 
 if(ok){
-location.href="ch-sound-last.html"
+location.href="ch-table1.html"
 }else{
 alert("권한 없음")
 }
@@ -132,6 +132,7 @@ alert("권한 없음")
 
 </body>
 </html>
+
 
 
 
