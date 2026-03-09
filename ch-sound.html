@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>임마뉴엘 시니어 센터 빙고</title>
+<style>
+  body,html{margin:0;padding:0;height:100%;background:black;font-family:Arial;overflow:hidden;}
+  #container{display:flex;height:100vh;}
+  #board{flex:1;display:grid;grid-template-columns:repeat(15,1fr);grid-template-rows:repeat(5,1fr);gap:2px;padding:10px;}
+  .cell{background:white;color:black;display:flex;align-items:center;justify-content:center;font-size:4vw;border:1px solid #333;position:relative;}
+  .circle{position:absolute;inset:5px;border:6px solid red;border-radius:50%;}
+  #sidebar{width:200px;background:#111;display:flex;flex-direction:column;padding:10px;gap:10px;color:white;}
+  #status,#mode,#bingo-count{background:#222;padding:10px;text-align:center;border-radius:6px;}
+  #bingo-count{background:#004400;font-size:1.4rem;}
+  button{padding:10px;border:none;border-radius:6px;color:white;cursor:pointer;}
+  #btn-on{background:#006600;} #btn-off{background:#444;} #btn-full{background:#880000;} #btn-reset{background:#336699;}
+  #recent{flex:1;display:flex;flex-direction:column;gap:6px;}
+  .recent-item{background:#222;font-size:3rem;text-align:center;padding:6px;border-radius:6px;opacity:.7;}
+  .recent-item:first-child{color:red;font-size:4rem;opacity:1;}
+  #large-number{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:32vw;font-weight:bold;color:red;display:none;z-index:9999;pointer-events:none;}
+  #won-this-draw{position:fixed;top:10px;left:50%;transform:translateX(-50%);font-size:2vw;color:#ffdd00;font-weight:bold;z-index:5000;white-space:nowrap;background:rgba(0,0,0,0.4);padding:4px 12px;border-radius:6px;}
+</style>
+</head>
+<body>
+
+<div id="large-number"></div>
+<div id="won-this-draw"></div>
+
+<div id="container">
+  <div id="board"></div>
+  <div id="sidebar">
+    <div id="status">드로우:0/75</div>
+    <div id="bingo-count">빙고:0/0</div>
+    <div id="mode">모드:OFF</div>
+    <button id="btn-off">OFF</button>
+    <button id="btn-on">ON</button>
+    <button id="btn-full">FULL</button>
+    <button id="btn-reset">새판</button>
+    <div id="recent"></div>
+  </div>
+</div>
+
+<script>
+const board=document.getElementById("board")
+const large=document.getElementById("large-number")
+const recentBox=document.getElementById("recent")
+const status=document.getElementById("status")
+const bingoCount=document.getElementById("bingo-count")
+const modeDisplay=document.getElementById("mode")
+const wonDisplay=document.getElementById("won-this-draw")
+
+let called=new Set()
+let drawCount=0
+let mode="off"
+let cards=[]
+let playerCards=[]
+let wonSession=new Set()
+
+// 사운드 관련
+let soundEnabled = false
+let ssKeyCount = 0
+
+// 카드 로드
+fetch("cards.json")
+.then(r=>r.json())
+.then(data=>{
+  cards=data.map(c=>({...c, card_id:String(c.card_id).padStart(3,'0')}))
+  startGame()
+})
+
+function startGame(){
+  called.clear()
+  drawCount=0
+  wonSession.clear()
+  playerCards=[]
+  for(let i=0;i<120;i++){
+    const idx=Math.floor(Math.random()*cards.length)
+    playerCards.push(idx)
+  }
+  buildBoard()
+  recentBox.innerHTML=""
+  wonDisplay.innerText=""
+  updateStatus()
+  bingoCount.innerText="빙고:0/0"
+}
+
+function buildBoard(){
+  board.innerHTML=""
+  for(let i=1;i<=75;i++){
+    const cell=document.createElement("div")
+    cell.className="cell"
+    cell.dataset.num=i
+    cell.innerText=i
+    board.appendChild(cell)
+  }
+}
+
+function drawNumber(){
+  if(drawCount>=75) return
+
+  let candidates=[...Array(75)].map((_,i)=>i+1).filter(n=>!called.has(n))
+
+  if(mode==="on"){
+    const possible=new Set()
+    playerCards.forEach(idx=>{
+      const card=cards[idx]
+      if(!wonSession.has(card.card_id)){
+        card.grid.flat().forEach(n=>{
+          const num=Number(n)
+          if(num>=1 && num<=75 && !called.has(num)){
+            possible.add(num)
+          }
+        })
+      }
+    })
+    if(possible.size>0) candidates=[...possible]
+  }
+
+  const num=candidates[Math.floor(Math.random()*candidates.length)]
+  called.add(num)
+  drawCount++
+  updateStatus()
+  markBoard(num)
+  showLarge(num)
+  updateRecent(num)
+  playSound(num)
+  checkBingo()
+}
+
+function markBoard(num){
+  const cell=document.querySelector(`[data-num="${num}"]`)
+  if(!cell) return
+  const c=document.createElement("div")
+  c.className="circle"
+  cell.appendChild(c)
+}
+
+function showLarge(num){
+  large.innerText=num
+  large.style.display="block"
+  setTimeout(()=>{large.style.display="none"},2000)
+}
+
+function updateRecent(num){
+  let arr=[num]
+  document.querySelectorAll(".recent-item").forEach(el=>{arr.push(el.innerText)})
+  arr=arr.slice(0,5)
+  recentBox.innerHTML=""
+  arr.forEach(n=>{
+    const d=document.createElement("div")
+    d.className="recent-item"
+    d.innerText=n
+    recentBox.appendChild(d)
+  })
+}
+
+function playSound(num){
+  if(!soundEnabled) return
+  const url=`https://lyw2001kr-git.github.io/yong26/${num}.mp3`
+  const audio=new Audio(url)
+  audio.play().catch(()=>{})
+}
+
+function updateStatus(){
+  status.innerText=`드로우:${drawCount}/75`
+}
+
+function checkBingo(){
+  let newThisDraw=0
+  let winners=[]
+  playerCards.forEach(idx=>{
+    const card=cards[idx]
+    const id=card.card_id
+    if(wonSession.has(id)) return
+    if(isBingo(card.grid)){
+      wonSession.add(id)
+      newThisDraw++
+      winners.push(id)
+    }
+  })
+  bingoCount.innerText=`빙고:${newThisDraw}/${wonSession.size}`
+  wonDisplay.innerText=winners.length>0?winners.join(", "):""
+}
+
+function isBingo(grid){
+  const arr=[...called]
+  if(mode==="full"){
+    return grid.flat().every(n=>n==="001" || arr.includes(Number(n)))
+  }
+  for(let r of grid) if(r.every(n=>n==="001" || arr.includes(Number(n)))) return true
+  for(let c=0;c<5;c++){
+    let ok=true
+    for(let r=0;r<5;r++){
+      let n=grid[r][c]
+      if(!(n==="001"||arr.includes(Number(n)))) ok=false
+    }
+    if(ok) return true
+  }
+  if(grid.every((r,i)=>r[i]==="001"||arr.includes(Number(r[i])))) return true
+  if(grid.every((r,i)=>r[4-i]==="001"||arr.includes(Number(r[4-i])))) return true
+  return false
+}
+
+// 이벤트
+document.addEventListener("keydown",e=>{
+  if(e.code==="Space"){ e.preventDefault(); drawNumber() }
+  if(e.key.toLowerCase()==="s"){
+    ssKeyCount++
+    if(ssKeyCount%2===0){
+      soundEnabled=!soundEnabled
+      alert(`사운드 ${soundEnabled?"ON":"OFF"}`)
+    }
+  }
+})
+
+document.addEventListener("click",e=>{
+  if(!soundEnabled) soundEnabled=true
+  if(e.target.tagName!=="BUTTON") drawNumber()
+})
+
+// 버튼
+document.getElementById("btn-on").onclick=()=>{mode="on";modeDisplay.innerText="모드:ON"}
+document.getElementById("btn-off").onclick=()=>{mode="off";modeDisplay.innerText="모드:OFF"}
+document.getElementById("btn-full").onclick=()=>{mode="full";modeDisplay.innerText="모드:FULL"}
+document.getElementById("btn-reset").onclick=()=>{startGame()}
+</script>
+
+</body>
+</html>
