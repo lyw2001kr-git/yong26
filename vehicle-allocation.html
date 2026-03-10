@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>웹 오픈 대기</title>
+<style>
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Malgun Gothic', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #f8c291, #6a89cc);
+  overflow: hidden;
+  color: #fff;
+  text-align: center;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+h1 {
+  font-size: 2.5rem;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+}
+
+img {
+  width: 200px;
+  height: 200px;
+  border-radius: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1);}
+  50% { transform: scale(1.05);}
+  100% { transform: scale(1);}
+}
+
+#countdown {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>웹이 곧 열립니다 🚀</h1>
+  <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="웹 준비 이미지">
+  <div id="countdown">5초 후 시작...</div>
+</div>
+
+<s
