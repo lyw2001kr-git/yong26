@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>강당 좌석 배치도</title>
+
+<style>
+
+body{
+font-family:'Malgun Gothic',sans-serif;
+background:#f4f7f6;
+padding:10px;
+padding-bottom:200px;
+margin:0;
+overflow-x:hidden;
+}
+
+h2{
+text-align:center;
+color:#2c3e50;
+}
+
+.scroll-wrapper{
+width:100%;
+overflow-x:auto;
+}
+
+.hall{
+display:grid;
+grid-template-columns:repeat(6,150px);
+gap:80px 25px;
+width:max-content;
+margin:0 auto;
+padding:40px 20px;
+}
+
+.table-circle{
+position:relative;
+width:85px;
+min-height:85px;
+background:#fff;
+border:3px solid #3498db;
+border-radius:50%;
+display:flex;
+align-items:flex-start;
+justify-content:center;
+flex-direction:column;
+padding-top:10px;
+margin:0 auto;
+}
+
+.table-small{
+width:45px;
+height:45px;
+border-color:#95a5a6;
+}
+
+.table-number{
+font-weight:bold;
+text-align:center;
+margin-bottom:5px;
+}
+
+.spot{
+font-size:18px;  /* 이름 크게 */
+font-weight:bold;
+color:#333;
+padding:2px 6px;
+margin:2px 0;
+text-align:center;
+cursor:pointer;
+white-space:nowrap;
+border-radius:4px;
+background:#f0f4f7;
+
+/* 클릭 시 튀어나오는 애니메이션 */
+transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.spot:active{
+transform: scale(1.5); /* 클릭 시 살짝 확대 */
+}
+
+.spot.absent{
+background:#e74c3c;
+color:#fff;
+}
+
+.control-panel{
+position:fixed;
+bottom:0;
+width:100%;
+background:#2c3e50;
+padding:20px;
+text-align:center;
+}
+
+.control-panel button{
+padding:10px 20px;
+margin:5px;
+border:none;
+border-radius:20px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.btn-reset{
+background:#3498db;
+color:white;
+}
+
+.btn-show{
+background:#e67e22;
+color:white;
+}
+
+.stats{
+margin-top:10px;
+font-size:18px;
+color:white;
+font-weight:bold;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>강당 좌석 / 인원 파악 / 크릭으로 확인 하기</h2>
+
+<div class="scroll-wrapper">
+<div class="hall" id="hall"></div>
+</div>
+
+<div class="control-panel">
+
+<button class="btn-reset" onclick="resetAttendance()">전체 출석</button>
+<button class="btn-show" onclick="updateStats()">출석 확인</button>
+<div class="stats" id="stats">출석: 0 / 0명</div>
+
+</div>
+
+<script>
+
+const hall=document.getElementById("hall")
+
+const smallTables=[1,2,19]
+
+const seatOrder=[
+"12시",
+"1시30분",
+"3시",
+"4시30분",
+"6시",
+"7시30분",
+"9시",
+"10시30분"
+]
+
+let totalPeople=0
+
+async function loadSeats(){
+
+const response=await fetch("seats.json")
+const tables=await response.json()
+
+tables.forEach(table=>{
+createTable(table)
+})
+
+updateStats()
+
+}
+
+function createTable(tableData){
+
+const table=document.createElement("div")
+table.className="table-circle"+(smallTables.includes(tableData.tableNumber)?" table-small":"")
+
+const num=document.createElement("div")
+num.className="table-number"
+num.innerText=tableData.tableNumber
+table.appendChild(num)
+
+seatOrder.forEach(time=>{
+const name=tableData.seats[time]
+if(name && name!==""){
+const spot=document.createElement("div")
+spot.className="spot"
+spot.innerText=name
+spot.onclick=toggleAttendance
+table.appendChild(spot)
+totalPeople++
+}
+})
+
+hall.appendChild(table)
+
+}
+
+function toggleAttendance(){
+this.classList.toggle("absent")
+updateStats()
+}
+
+function resetAttendance(){
+document.querySelectorAll(".spot").forEach(s=>{
+s.classList.remove("absent")
+})
+updateStats()
+}
+
+function updateStats(){
+const absent=document.querySelectorAll(".spot.absent").length
+const present=totalPeople-absent
+document.getElementById("stats").innerText=
+`출석: ${present} / ${totalPeople}명`
+}
+
+loadSeats()
+
+</script>
+
+</body>
+</html>

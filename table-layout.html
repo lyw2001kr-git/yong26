@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>강당 좌석 배치도</title>
+
+<style>
+
+body{
+font-family:'Malgun Gothic',sans-serif;
+background:#f4f7f6;
+padding:10px;
+padding-bottom:150px;
+margin:0;
+overflow-x:hidden;
+}
+
+h2{
+text-align:center;
+color:#2c3e50;
+font-size:1.5rem;
+margin:20px 0;
+}
+
+.scroll-wrapper{
+width:100%;
+overflow-x:auto;
+padding-bottom:50px;
+-webkit-overflow-scrolling:touch;
+}
+
+.hall{
+display:grid;
+grid-template-columns:repeat(6,150px);
+gap:80px 25px;
+width:max-content;
+margin:0 auto;
+padding:40px 20px;
+}
+
+.table-circle{
+position:relative;
+width:85px;
+height:85px;
+background:#fff;
+border:3px solid #3498db;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+margin:0 auto;
+transition:all .3s;
+}
+
+.table-small{
+width:45px;
+height:45px;
+border-color:#95a5a6;
+}
+
+.table-number{
+font-size:1.1rem;
+font-weight:bold;
+color:#2c3e50;
+pointer-events:none;
+}
+
+.table-circle.highlight{
+background:#f1c40f;
+border-color:#f39c12;
+transform:scale(1.15);
+z-index:50;
+}
+
+.spot{
+position:absolute;
+font-size:13px;
+font-weight:bold;
+color:transparent;
+white-space:nowrap;
+text-align:center;
+}
+
+.occupied{
+color:#333;
+}
+
+.spot.found{
+background:#e74c3c;
+color:#fff !important;
+padding:3px 10px;
+border-radius:12px;
+font-size:15px;
+z-index:100;
+box-shadow:0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* 좌석 위치 */
+
+.spot:nth-child(2){top:-22px;left:50%;transform:translateX(-50%)}
+.spot:nth-child(3){top:0;right:-25px}
+.spot:nth-child(4){top:50%;right:-35px;transform:translateY(-50%)}
+.spot:nth-child(5){bottom:0;right:-25px}
+.spot:nth-child(6){bottom:-22px;left:50%;transform:translateX(-50%)}
+.spot:nth-child(7){bottom:0;left:-25px}
+.spot:nth-child(8){top:50%;left:-35px;transform:translateY(-50%)}
+.spot:nth-child(9){top:0;left:-25px}
+
+.search-container{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+background:#2c3e50;
+padding:25px 0;
+display:flex;
+justify-content:center;
+align-items:center;
+box-shadow:0 -5px 15px rgba(0,0,0,0.3);
+z-index:1000;
+}
+
+.search-container input{
+padding:15px 20px;
+width:60%;
+max-width:250px;
+border-radius:30px 0 0 30px;
+border:none;
+font-size:18px;
+outline:none;
+}
+
+.search-container button{
+padding:15px 25px;
+border-radius:0 30px 30px 0;
+border:none;
+background:#e74c3c;
+color:white;
+font-weight:bold;
+cursor:pointer;
+font-size:18px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>테이블 배치 / 6번과 36번 옆문으로 ==>엑티비티문/ 37번 옆문은 ==>창고</h2>
+
+<div class="scroll-wrapper">
+<div class="hall" id="hall"></div>
+</div>
+
+<div class="search-container">
+
+<input 
+type="text" 
+id="searchInput" 
+placeholder="성함 입력..." 
+oninput="findPerson()"
+>
+
+<button onclick="findPerson()">찾기</button>
+
+</div>
+
+<script>
+
+const hall=document.getElementById("hall")
+
+const smallTables=[1,2,19]
+
+const seatOrder=[
+"12시",
+"1시30분",
+"3시",
+"4시30분",
+"6시",
+"7시30분",
+"9시",
+"10시30분"
+]
+
+async function loadSeats(){
+
+const response=await fetch("seats.json")
+
+const tables=await response.json()
+
+tables.forEach(table=>{
+createTable(table)
+})
+
+}
+
+function createTable(tableData){
+
+const table=document.createElement("div")
+
+table.className="table-circle"+(smallTables.includes(tableData.tableNumber)?" table-small":"")
+
+table.id=`table-${tableData.tableNumber}`
+
+const num=document.createElement("div")
+
+num.className="table-number"
+
+num.innerText=tableData.tableNumber
+
+table.appendChild(num)
+
+seatOrder.forEach(time=>{
+
+const spot=document.createElement("div")
+
+spot.className="spot"
+
+const name=tableData.seats[time]
+
+if(name && name!==""){
+
+spot.innerText=name
+
+spot.classList.add("occupied")
+
+}
+
+table.appendChild(spot)
+
+})
+
+hall.appendChild(table)
+
+}
+
+function findPerson(){
+
+const keyword=document.getElementById("searchInput").value.trim()
+
+document.querySelectorAll(".table-circle")
+.forEach(t=>t.classList.remove("highlight"))
+
+document.querySelectorAll(".spot")
+.forEach(s=>s.classList.remove("found"))
+
+if(!keyword)return
+
+let found=false
+
+document.querySelectorAll(".spot.occupied").forEach(spot=>{
+
+if(spot.innerText.includes(keyword)){
+
+const parentTable=spot.closest(".table-circle")
+
+parentTable.classList.add("highlight")
+
+spot.classList.add("found")
+
+if(!found){
+
+parentTable.scrollIntoView({
+behavior:"smooth",
+block:"center",
+inline:"center"
+})
+
+found=true
+}
+
+}
+
+})
+
+}
+
+loadSeats()
+
+</script>
+
+</body>
+</html>
