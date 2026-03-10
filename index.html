@@ -56,89 +56,36 @@ opacity:0.85;
 
 <div class="menu">
 
-<button class="btn1" onclick="checkAttendance()">출 석 체 크</button>
-
-<button class="btn2" onclick="checkTable()">홀 좌석 배치도</button>
-
-<button class="btn3" onclick="checkBingo()">자동 빙고 드로</button>
-
-<button class="btn4" onclick="checkTel()">직원들 연락처</button>
+<button class="btn1" onclick="checkAccess('attendance.html')">출 석 체 크</button>
+<button class="btn2" onclick="checkAccess('table-layout.html')">홀 좌석 배치도</button>
+<button class="btn3" onclick="checkAccess('bingo-draw.html')">자동 빙고 드로</button>
+<button class="btn4" onclick="checkAccess('staff-phone-number.html')">직원들 연락처</button>
 
 </div>
 
 <script>
 
-async function checkAttendance(){
+// 공통 함수: 전화번호 뒤 4자리로 인증
+async function checkAccess(redirectUrl){
+    let pass = prompt("전화번호 뒤 4자리 입력")
+    if(!pass) return;
 
-let pass=prompt("비밀번호 입력")
-
-if(pass==="000"){
-location.href="ch-table.html"
-}else{
-alert("비밀번호 틀림")
-}
-
-}
-
-async function checkBingo(){
-
-let pass=prompt("비밀번호 입력")
-
-if(pass==="111"){
-location.href="ch-sound-last.html"
-}else{
-alert("비밀번호 틀림")
-}
-
-}
-
-async function checkTable(){
-
-let pass=prompt("전화번호 뒤 4자리")
-
-const res=await fetch("tel.json")
-
-const users=await res.json()
-
-const ok=users.find(u=>u.password===pass)
-
-if(ok){
-location.href="ch-table1.html"
-}else{
-alert("권한 없음")
-}
-
-}
-
-async function checkTel(){
-
-let pass=prompt("전화번호 뒤 4자리")
-
-const res=await fetch("tel.json")
-
-const users=await res.json()
-
-const ok=users.find(u=>u.password===pass)
-
-if(ok){
-location.href="dr-tel.html"
-}else{
-alert("권한 없음")
-}
-
+    try {
+        const res = await fetch("tel.json")
+        const users = await res.json()
+        const ok = users.find(u => u.password === pass)
+        if(ok){
+            location.href = redirectUrl
+        } else {
+            alert("권한 없음")
+        }
+    } catch(err){
+        console.error(err)
+        alert("데이터를 불러올 수 없습니다.")
+    }
 }
 
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
