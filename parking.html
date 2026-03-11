@@ -89,6 +89,7 @@ text-align:center;
 font-size:clamp(1.1rem,4vw,1.5rem);
 padding-left:15px;
 flex:1;
+white-space:pre-line;
 }
 
 .highlight{
@@ -104,7 +105,7 @@ border-color:#ff9900;
 <h1>주차장 매칭</h1>
 
 <div class="search-box">
-<input id="searchInput" placeholder="주차장 번호 입력" oninput="searchSpot()">
+<input id="searchInput" type="number" placeholder="주차장 번호 입력" oninput="searchSpot()">
 </div>
 
 <div id="result">번호를 입력하면 차량 정보가 표시됩니다.</div>
@@ -116,17 +117,13 @@ border-color:#ff9900;
 fetch("member.json")
 .then(res=>res.json())
 .then(data=>{
-
 window.parking=data
-
 drawParking(data)
-
 })
 
 function drawParking(data){
 
 const list=document.getElementById("parkingList")
-
 list.innerHTML=""
 
 const sorted=[...data].sort((a,b)=>b.spot-a.spot)
@@ -143,7 +140,7 @@ num.innerText=item.spot
 
 const info=document.createElement("div")
 info.className="spot-info"
-info.innerText=item.carInfo
+info.innerText=item.carInfo + "\n" + item.for
 
 card.appendChild(num)
 card.appendChild(info)
@@ -157,41 +154,33 @@ list.appendChild(card)
 function searchSpot(){
 
 const value=document.getElementById("searchInput").value.trim()
-
 const result=document.getElementById("result")
 
 document.querySelectorAll(".spot").forEach(s=>s.classList.remove("highlight"))
 
 if(value===""){
-
 result.innerText="번호를 입력하면 차량 정보가 표시됩니다."
 return
-
 }
 
 const found=parking.find(p=>p.spot==value)
 
 if(found){
 
-result.innerText=`${value}번 : ${found.carInfo}`
+result.innerText=`${value}번 : ${found.carInfo} (${found.for})`
 
 const card=document.getElementById("spot-"+value)
 
 if(card){
-
 card.classList.add("highlight")
-
 card.scrollIntoView({
 behavior:"smooth",
 block:"center"
 })
-
 }
 
 }else{
-
 result.innerText="해당 번호 없음"
-
 }
 
 }
