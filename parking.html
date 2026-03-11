@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>임마뉴엘 센터 주차장</title>
+
+<style>
+
+body{
+margin:0;
+font-family:'Malgun Gothic',sans-serif;
+background:#f5f7f6;
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+
+h1{
+margin:20px 0 10px;
+color:#006600;
+font-size:clamp(2rem,6vw,3rem);
+}
+
+/* 검색창 */
+
+.search-box{
+position:sticky;
+top:0;
+background:white;
+padding:15px;
+width:100%;
+max-width:500px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+z-index:10;
+}
+
+.search-box input{
+width:100%;
+padding:15px;
+font-size:1.2rem;
+border-radius:10px;
+border:2px solid #66cc66;
+text-align:center;
+}
+
+#result{
+margin:10px;
+font-size:1.2rem;
+text-align:center;
+}
+
+/* 리스트 */
+
+.parking-list{
+width:100%;
+max-width:500px;
+display:flex;
+flex-direction:column;
+gap:14px;
+padding:10px;
+}
+
+/* 카드 */
+
+.spot{
+display:flex;
+align-items:center;
+background:white;
+border-radius:16px;
+border:3px solid red;
+padding:18px;
+box-shadow:0 6px 16px rgba(0,0,0,0.08);
+transition:all .25s;
+}
+
+.spot:active{
+transform:scale(0.96);
+}
+
+.spot-number{
+font-size:clamp(3rem,12vw,4.5rem);
+font-weight:bold;
+width:90px;
+text-align:center;
+}
+
+.spot-info{
+font-size:clamp(1.1rem,4vw,1.5rem);
+padding-left:15px;
+flex:1;
+}
+
+.highlight{
+background:#fff5b1;
+border-color:#ff9900;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>주차장 매칭</h1>
+
+<div class="search-box">
+<input id="searchInput" placeholder="주차장 번호 입력" oninput="searchSpot()">
+</div>
+
+<div id="result">번호를 입력하면 차량 정보가 표시됩니다.</div>
+
+<div class="parking-list" id="parkingList"></div>
+
+<script>
+
+fetch("member.json")
+.then(res=>res.json())
+.then(data=>{
+
+window.parking=data
+
+drawParking(data)
+
+})
+
+function drawParking(data){
+
+const list=document.getElementById("parkingList")
+
+list.innerHTML=""
+
+const sorted=[...data].sort((a,b)=>b.spot-a.spot)
+
+sorted.forEach(item=>{
+
+const card=document.createElement("div")
+card.className="spot"
+card.id="spot-"+item.spot
+
+const num=document.createElement("div")
+num.className="spot-number"
+num.innerText=item.spot
+
+const info=document.createElement("div")
+info.className="spot-info"
+info.innerText=item.carInfo
+
+card.appendChild(num)
+card.appendChild(info)
+
+list.appendChild(card)
+
+})
+
+}
+
+function searchSpot(){
+
+const value=document.getElementById("searchInput").value.trim()
+
+const result=document.getElementById("result")
+
+document.querySelectorAll(".spot").forEach(s=>s.classList.remove("highlight"))
+
+if(value===""){
+
+result.innerText="번호를 입력하면 차량 정보가 표시됩니다."
+return
+
+}
+
+const found=parking.find(p=>p.spot==value)
+
+if(found){
+
+result.innerText=`${value}번 : ${found.carInfo}`
+
+const card=document.getElementById("spot-"+value)
+
+if(card){
+
+card.classList.add("highlight")
+
+card.scrollIntoView({
+behavior:"smooth",
+block:"center"
+})
+
+}
+
+}else{
+
+result.innerText="해당 번호 없음"
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
