@@ -33,7 +33,7 @@ padding-bottom:50px;
 .hall{
 display:grid;
 grid-template-columns:repeat(6,150px);
-gap:80px 25px;
+gap:80px 20px;
 width:max-content;
 margin:0 auto;
 padding:40px 20px;
@@ -202,6 +202,11 @@ const table=document.createElement("div")
 table.className="table-circle"+(smallTables.includes(tableData.tableNumber)?" table-small":"")
 
 table.id=`table-${tableData.tableNumber}`
+
+if(tableData.tableNumber==22){
+table.style.opacity="0"
+table.style.pointerEvents="none"
+}
 
 const num=document.createElement("div")
 
