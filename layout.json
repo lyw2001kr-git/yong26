@@ -1,42 +1,339 @@
 {
-  "cols": 22,
-  "rows": 18,
+  "cols": 23,
+  "rows": 19,
   "items": [
-    { "id": "id-149cwkmd", "type": "table-large", "label": "테이블", "x": 2, "y": 2 },
-    { "id": "id-ylasxr6j", "type": "table-large", "label": "테이블", "x": 2, "y": 5 },
-    { "id": "id-ec4ixgmw", "type": "table-small", "label": "소형", "x": 2, "y": 8 },
-    { "id": "id-rea3fmz1", "type": "table-large", "label": "테이블", "x": 2, "y": 11 },
-    { "id": "id-twa0qe33", "type": "table-large", "label": "테이블", "x": 2, "y": 14 },
-    { "id": "id-djbxcu6l", "type": "table-large", "label": "테이블", "x": 2, "y": 17 },
-    { "id": "id-383dd622", "type": "table-large", "label": "테이블", "x": 6, "y": 4 },
-    { "id": "id-za8769qb", "type": "table-small", "label": "소형", "x": 6, "y": 2 },
-    { "id": "id-kinyl7nd", "type": "table-large", "label": "테이블", "x": 6, "y": 7 },
-    { "id": "id-jfmgnc17", "type": "table-large", "label": "테이블", "x": 6, "y": 10 },
-    { "id": "id-sup6cjra", "type": "table-large", "label": "테이블", "x": 6, "y": 13 },
-    { "id": "id-6mqeqxp6", "type": "table-large", "label": "테이블", "x": 6, "y": 16 },
-    { "id": "id-z2i74dq4", "type": "table-large", "label": "테이블", "x": 9, "y": 2 },
-    { "id": "id-ol49u5ka", "type": "table-large", "label": "테이블", "x": 9, "y": 5 },
-    { "id": "id-m0welmb4", "type": "table-large", "label": "테이블", "x": 9, "y": 8 },
-    { "id": "id-b5q8zpsb", "type": "table-large", "label": "테이블", "x": 9, "y": 11 },
-    { "id": "id-t6drsnpy", "type": "table-large", "label": "테이블", "x": 9, "y": 14 },
-    { "id": "id-vejfez5i", "type": "table-large", "label": "테이블", "x": 9, "y": 17 },
-    { "id": "id-60xfq2bd", "type": "table-large", "label": "테이블", "x": 13, "y": 2 },
-    { "id": "id-9htkfz0x", "type": "table-large", "label": "테이블", "x": 16, "y": 2 },
-    { "id": "id-5d2e6zeb", "type": "table-large", "label": "테이블", "x": 20, "y": 4 },
-    { "id": "id-hx3gve4n", "type": "table-large", "label": "테이블", "x": 20, "y": 7 },
-    { "id": "id-215vswb7", "type": "table-large", "label": "테이블", "x": 20, "y": 10 },
-    { "id": "id-8fofqjsx", "type": "table-large", "label": "테이블", "x": 20, "y": 13 },
-    { "id": "id-94xut96r", "type": "table-large", "label": "테이블", "x": 20, "y": 16 },
-    { "id": "id-hmsnt1v4", "type": "table-large", "label": "테이블", "x": 13, "y": 6 },
-    { "id": "id-a9281wgd", "type": "pillar", "label": "기둥", "x": 13, "y": 4 },
-    { "id": "id-roby5qfp", "type": "table-large", "label": "테이블", "x": 13, "y": 9 },
-    { "id": "id-7q8h8x4s", "type": "pillar", "label": "기둥", "x": 13, "y": 11 },
-    { "id": "id-b53mtmsc", "type": "table-large", "label": "테이블", "x": 13, "y": 13 },
-    { "id": "id-f03m58bd", "type": "table-large", "label": "테이블", "x": 13, "y": 16 },
-    { "id": "id-2l5dcvyj", "type": "table-large", "label": "테이블", "x": 16, "y": 5 },
-    { "id": "id-70113byo", "type": "table-large", "label": "테이블", "x": 16, "y": 8 },
-    { "id": "id-7htr82di", "type": "table-large", "label": "테이블", "x": 16, "y": 11 },
-    { "id": "id-r79yl243", "type": "table-large", "label": "테이블", "x": 16, "y": 14 },
-    { "id": "id-gp29esxv", "type": "table-large", "label": "테이블", "x": 16, "y": 17 }
+    {
+      "id": "id-149cwkmd",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 3,
+      "y": 3
+    },
+    {
+      "id": "id-ylasxr6j",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 3,
+      "y": 6
+    },
+    {
+      "id": "id-ec4ixgmw",
+      "type": "table-small",
+      "label": "소형",
+      "x": 3,
+      "y": 9
+    },
+    {
+      "id": "id-rea3fmz1",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 3,
+      "y": 12
+    },
+    {
+      "id": "id-twa0qe33",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 3,
+      "y": 15
+    },
+    {
+      "id": "id-djbxcu6l",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 3,
+      "y": 18
+    },
+    {
+      "id": "id-383dd622",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 7,
+      "y": 5
+    },
+    {
+      "id": "id-za8769qb",
+      "type": "table-small",
+      "label": "소형",
+      "x": 7,
+      "y": 3
+    },
+    {
+      "id": "id-kinyl7nd",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 7,
+      "y": 8
+    },
+    {
+      "id": "id-jfmgnc17",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 7,
+      "y": 11
+    },
+    {
+      "id": "id-sup6cjra",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 7,
+      "y": 14
+    },
+    {
+      "id": "id-6mqeqxp6",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 7,
+      "y": 17
+    },
+    {
+      "id": "id-z2i74dq4",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 10,
+      "y": 3
+    },
+    {
+      "id": "id-ol49u5ka",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 10,
+      "y": 6
+    },
+    {
+      "id": "id-m0welmb4",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 10,
+      "y": 9
+    },
+    {
+      "id": "id-b5q8zpsb",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 10,
+      "y": 12
+    },
+    {
+      "id": "id-t6drsnpy",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 10,
+      "y": 15
+    },
+    {
+      "id": "id-vejfez5i",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 10,
+      "y": 18
+    },
+    {
+      "id": "id-60xfq2bd",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 14,
+      "y": 3
+    },
+    {
+      "id": "id-9htkfz0x",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 17,
+      "y": 3
+    },
+    {
+      "id": "id-5d2e6zeb",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 21,
+      "y": 5
+    },
+    {
+      "id": "id-hx3gve4n",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 21,
+      "y": 8
+    },
+    {
+      "id": "id-215vswb7",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 21,
+      "y": 11
+    },
+    {
+      "id": "id-8fofqjsx",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 21,
+      "y": 14
+    },
+    {
+      "id": "id-94xut96r",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 21,
+      "y": 17
+    },
+    {
+      "id": "id-hmsnt1v4",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 14,
+      "y": 7
+    },
+    {
+      "id": "id-a9281wgd",
+      "type": "pillar",
+      "label": "기둥",
+      "x": 14,
+      "y": 5
+    },
+    {
+      "id": "id-roby5qfp",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 14,
+      "y": 10
+    },
+    {
+      "id": "id-7q8h8x4s",
+      "type": "pillar",
+      "label": "기둥",
+      "x": 14,
+      "y": 12
+    },
+    {
+      "id": "id-b53mtmsc",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 14,
+      "y": 14
+    },
+    {
+      "id": "id-f03m58bd",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 14,
+      "y": 17
+    },
+    {
+      "id": "id-2l5dcvyj",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 17,
+      "y": 6
+    },
+    {
+      "id": "id-70113byo",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 17,
+      "y": 9
+    },
+    {
+      "id": "id-7htr82di",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 17,
+      "y": 12
+    },
+    {
+      "id": "id-r79yl243",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 17,
+      "y": 15
+    },
+    {
+      "id": "id-gp29esxv",
+      "type": "table-large",
+      "label": "테이블",
+      "x": 17,
+      "y": 18
+    },
+    {
+      "id": "id-ijy8zjwd",
+      "type": "side-door",
+      "label": "옆문",
+      "x": 23,
+      "y": 2,
+      "w": 1,
+      "h": 2
+    },
+    {
+      "id": "id-6pm132z9",
+      "type": "side-door",
+      "label": "옆문",
+      "x": 23,
+      "y": 18,
+      "w": 1,
+      "h": 2
+    },
+    {
+      "id": "id-d6n1csyy",
+      "type": "office",
+      "label": "사무실",
+      "x": 16,
+      "y": 1,
+      "w": 4,
+      "h": 1
+    },
+    {
+      "id": "id-jzlbq26e",
+      "type": "rear-window",
+      "label": "뒤쪽길",
+      "x": 5,
+      "y": 19,
+      "w": 1,
+      "h": 1
+    },
+    {
+      "id": "id-37xs34xx",
+      "type": "restroom",
+      "label": "화장실",
+      "x": 3,
+      "y": 1,
+      "w": 1,
+      "h": 1
+    },
+    {
+      "id": "id-wroi3ibh",
+      "type": "restroom",
+      "label": "화장실",
+      "x": 6,
+      "y": 1,
+      "w": 1,
+      "h": 1
+    },
+    {
+      "id": "id-wtxbulzs",
+      "type": "rear-window",
+      "label": "뒤쪽길",
+      "x": 12,
+      "y": 19,
+      "w": 1,
+      "h": 1
+    },
+    {
+      "id": "id-cvfx3rqd",
+      "type": "rear-window",
+      "label": "뒤쪽길",
+      "x": 19,
+      "y": 19,
+      "w": 1,
+      "h": 1
+    },
+    {
+      "id": "id-ilz8k9xq",
+      "type": "side-door",
+      "label": "옆문",
+      "x": 1,
+      "y": 18,
+      "w": 1,
+      "h": 2
+    }
   ]
 }
