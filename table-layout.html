@@ -1,289 +1,598 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>강당 좌석 배치도</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>정문 기준 좌석 보기</title>
+  <style>
+    * { box-sizing: border-box; }
 
-<style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #f4f6f8;
+      font-family: Arial, "Malgun Gothic", "맑은 고딕", sans-serif;
+      color: #222;
+      overflow-x: hidden;
+    }
 
-body{
-font-family:'Malgun Gothic',sans-serif;
-background:#f4f7f6;
-padding:10px;
-padding-bottom:150px;
-margin:0;
-overflow-x:hidden;
-}
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #1f2937;
+      color: #fff;
+      border-bottom: 1px solid #111827;
+      flex-wrap: wrap;
+    }
 
-h2{
-text-align:center;
-color:#2c3e50;
-font-size:1.5rem;
-margin:20px 0;
-}
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-right: 16px;
+    }
 
-.scroll-wrapper{
-width:100%;
-overflow-x:auto;
-padding-bottom:50px;
--webkit-overflow-scrolling:touch;
-}
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #374151;
+      color: #fff;
+    }
 
-.hall{
-display:grid;
-grid-template-columns:repeat(6,150px);
-gap:80px 20px;
-width:max-content;
-margin:0 auto;
-padding:40px 20px;
-}
+    .btn:hover { background: #4b5563; }
+    .btn.active { background: #2563eb; }
 
-.table-circle{
-position:relative;
-width:85px;
-height:85px;
-background:#fff;
-border:3px solid #3498db;
-border-radius:50%;
-display:flex;
-align-items:center;
-justify-content:center;
-margin:0 auto;
-transition:all .3s;
-}
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #374151;
+      padding: 6px 10px;
+      border-radius: 10px;
+    }
 
-.table-small{
-width:45px;
-height:45px;
-border-color:#95a5a6;
-}
+    .search-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+    }
 
-.table-number{
-font-size:1.1rem;
-font-weight:bold;
-color:#2c3e50;
-pointer-events:none;
-}
+    .search-input {
+      width: 220px;
+      max-width: 50vw;
+      border: 1px solid #6b7280;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 14px;
+      outline: none;
+      background: #fff;
+      color: #111827;
+    }
 
-.table-circle.highlight{
-background:#f1c40f;
-border-color:#f39c12;
-transform:scale(1.15);
-z-index:50;
-}
+    .search-input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.18);
+    }
 
-.spot{
-position:absolute;
-font-size:13px;
-font-weight:bold;
-color:transparent;
-white-space:nowrap;
-text-align:center;
-}
+    .status-text {
+      margin-left: auto;
+      font-size: 14px;
+      opacity: 0.95;
+    }
 
-.occupied{
-color:#333;
-}
+    .page-wrap {
+      padding: 10px;
+    }
 
-.spot.found{
-background:#e74c3c;
-color:#fff !important;
-padding:3px 10px;
-border-radius:12px;
-font-size:15px;
-z-index:100;
-box-shadow:0 2px 8px rgba(0,0,0,0.3);
-}
+    .hall-outer {
+      width: 100%;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x pan-y;
+      border-radius: 16px;
+    }
 
-/* 좌석 위치 */
+    .hall-stage {
+      position: relative;
+      transform-origin: top left;
+    }
 
-.spot:nth-child(2){top:-22px;left:50%;transform:translateX(-50%)}
-.spot:nth-child(3){top:0;right:-25px}
-.spot:nth-child(4){top:50%;right:-35px;transform:translateY(-50%)}
-.spot:nth-child(5){bottom:0;right:-25px}
-.spot:nth-child(6){bottom:-22px;left:50%;transform:translateX(-50%)}
-.spot:nth-child(7){bottom:0;left:-25px}
-.spot:nth-child(8){top:50%;left:-35px;transform:translateY(-50%)}
-.spot:nth-child(9){top:0;left:-25px}
+    .hall {
+      --text-rotate: 0deg;
+      position: relative;
+      width: 1500px;
+      height: 980px;
+      background:
+        linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px),
+        #e5e7eb;
+      background-size: 68px 48px;
+      border: 2px solid #9ca3af;
+      border-radius: 18px;
+      overflow: hidden;
+      transform-origin: center center;
+    }
 
-.search-container{
-position:fixed;
-bottom:0;
-left:0;
-width:100%;
-background:#2c3e50;
-padding:25px 0;
-display:flex;
-justify-content:center;
-align-items:center;
-box-shadow:0 -5px 15px rgba(0,0,0,0.3);
-z-index:1000;
-}
+    .entry {
+      position: absolute;
+      left: 50%;
+      top: 18px;
+      transform: translateX(-50%) rotate(var(--text-rotate));
+      background: #111827;
+      color: #fff;
+      font-weight: 800;
+      font-size: 26px;
+      padding: 10px 26px;
+      border-radius: 14px;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      z-index: 5;
+    }
 
-.search-container input{
-padding:15px 20px;
-width:60%;
-max-width:250px;
-border-radius:30px 0 0 30px;
-border:none;
-font-size:18px;
-outline:none;
-}
+    .legend {
+      position: absolute;
+      right: 16px;
+      top: 18px;
+      transform: rotate(var(--text-rotate));
+      transform-origin: center center;
+      background: rgba(255,255,255,0.92);
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      z-index: 5;
+    }
 
-.search-container button{
-padding:15px 25px;
-border-radius:0 30px 30px 0;
-border:none;
-background:#e74c3c;
-color:white;
-font-weight:bold;
-cursor:pointer;
-font-size:18px;
-}
+    .table {
+      position: absolute;
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      background: #3b82f6;
+      border: 4px solid #1d4ed8;
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35);
+    }
 
-</style>
+    .table.small {
+      width: 72px;
+      height: 72px;
+    }
+
+    .table-label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) rotate(var(--text-rotate));
+      color: #fff;
+      font-size: 22px;
+      font-weight: 800;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .table.small .table-label {
+      font-size: 18px;
+    }
+
+    .pillar {
+      position: absolute;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #9ca3af;
+      border: 3px solid #6b7280;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pillar-text {
+      color: #111827;
+      font-size: 10px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.1;
+      transform: rotate(var(--text-rotate));
+      transform-origin: center center;
+      white-space: nowrap;
+    }
+
+    .custom-item {
+      position: absolute;
+      min-width: 60px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      text-align: center;
+    }
+
+    .custom-item-text {
+      font-size: 12px;
+      font-weight: 700;
+      color: #78350f;
+      transform: rotate(var(--text-rotate));
+      transform-origin: center center;
+      white-space: nowrap;
+    }
+
+    .seat-name {
+      position: absolute;
+      min-width: 56px;
+      max-width: 96px;
+      padding: 3px 6px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.94);
+      border: 1px solid #cbd5e1;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.15;
+      color: #111827;
+      text-align: center;
+      transform: translate(-50%, -50%) rotate(var(--text-rotate));
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .seat-name.match {
+      background: #fee2e2;
+      border-color: #ef4444;
+      color: #b91c1c;
+    }
+
+    #message {
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 10px 12px;
+      border-radius: 10px;
+    }
+
+    #message.loading {
+      color: #1d4ed8;
+      background: #dbeafe;
+      border: 1px solid #93c5fd;
+    }
+
+    #message.error {
+      color: #991b1b;
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+    }
+
+    @media (max-width: 900px) {
+      .title { font-size: 18px; }
+      .btn { font-size: 14px; padding: 8px 12px; }
+      .search-label { font-size: 13px; }
+      .search-input { width: 160px; }
+      .status-text {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 4px;
+      }
+    }
+  </style>
 </head>
-
 <body>
+  <div class="topbar">
+    <div class="title">정문 기준 좌석 보기</div>
+    <button id="btnRear" class="btn active">뒤에서 보기</button>
+    <button id="btnFront" class="btn">앞에서 보기</button>
+    <button id="btnRefresh" class="btn">새로 고침</button>
 
-<h2>테이블 배치 / 6번과 36번 옆문으로 =>엑티비티문/ 31번 옆문은 =>창고</h2>
+    <div class="search-wrap">
+      <span class="search-label">찾기</span>
+      <input id="searchInput" class="search-input" type="text" placeholder="이름 입력" />
+    </div>
 
-<div class="scroll-wrapper">
-<div class="hall" id="hall"></div>
-</div>
+    <div id="statusText" class="status-text">뒤에서 보는 화면</div>
+  </div>
 
-<div class="search-container">
+  <div class="page-wrap">
+    <div class="hall-outer" id="hallOuter">
+      <div class="hall-stage" id="hallStage">
+        <div id="hall" class="hall">
+          <div class="entry">정문</div>
+          <div class="legend">
+            파란 원 = 테이블<br>
+            회색 원 = 기둥<br>
+            흰 박스 = 자리 이름
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="message" class="loading">데이터 불러오는 중.</div>
+  </div>
 
-<input 
-type="text" 
-id="searchInput" 
-placeholder="성함 입력..." 
-oninput="findPerson()"
->
+  <script>
+    const hall = document.getElementById("hall");
+    const hallOuter = document.getElementById("hallOuter");
+    const hallStage = document.getElementById("hallStage");
+    const btnRear = document.getElementById("btnRear");
+    const btnFront = document.getElementById("btnFront");
+    const btnRefresh = document.getElementById("btnRefresh");
+    const searchInput = document.getElementById("searchInput");
+    const statusText = document.getElementById("statusText");
+    const message = document.getElementById("message");
 
-<button onclick="findPerson()">찾기</button>
+    const HALL_W = 1500;
+    const HALL_H = 980;
 
-</div>
+    const TABLE_COORD_TO_NO = {
+      "2,2": 1, "6,2": 2, "9,2": 3, "13,2": 4, "16,2": 5, "20,4": 6,
+      "2,5": 7, "6,4": 8, "9,5": 9, "13,6": 10, "16,5": 11, "20,7": 12,
+      "2,8": 13, "6,7": 14, "9,8": 15, "13,9": 16, "16,8": 17, "20,10": 18,
+      "2,11": 19, "6,10": 20, "9,11": 21, "13,13": 22, "16,11": 23, "20,13": 24,
+      "2,14": 25, "6,13": 26, "9,14": 27, "13,16": 28, "16,14": 29, "20,16": 30,
+      "2,17": 31, "6,16": 32, "9,17": 33, "16,17": 34
+    };
 
-<script>
+    const seatOffsetsLarge = {
+      "12시":     { x: 44, y: -10 },
+      "1시30분":  { x: 76, y: 4 },
+      "3시":      { x: 98, y: 28 },
+      "4시30분":  { x: 76, y: 56 },
+      "6시":      { x: 44, y: 82 },
+      "7시30분":  { x: -10, y: 56 },
+      "9시":      { x: -28, y: 28 },
+      "10시30분": { x: -10, y: 4 }
+    };
 
-const hall=document.getElementById("hall")
+    const seatOffsetsSmall = {
+      "12시":     { x: 36, y: -10 },
+      "1시30분":  { x: 64, y: 0 },
+      "3시":      { x: 84, y: 24 },
+      "4시30분":  { x: 64, y: 48 },
+      "6시":      { x: 36, y: 68 },
+      "7시30분":  { x: -8, y: 48 },
+      "9시":      { x: -24, y: 24 },
+      "10시30분": { x: -8, y: 0 }
+    };
 
-const smallTables=[2,13]
+    function setView(mode) {
+      if (mode === "front") {
+        btnFront.classList.add("active");
+        btnRear.classList.remove("active");
+        statusText.textContent = "앞에서 보는 화면";
+      } else {
+        mode = "rear";
+        btnRear.classList.add("active");
+        btnFront.classList.remove("active");
+        statusText.textContent = "뒤에서 보는 화면";
+      }
 
-const seatOrder=[
-"12시",
-"1시30분",
-"3시",
-"4시30분",
-"6시",
-"7시30분",
-"9시",
-"10시30분"
-]
+      localStorage.setItem("viewer_view_mode", mode);
+      applyResponsiveScale();
+    }
 
-async function loadSeats(){
+    async function fetchJson(url) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(url + " 불러오기 실패");
+      return await res.json();
+    }
 
-const response=await fetch("seats.json")
+    function clearDynamicElements() {
+      hall.querySelectorAll(".table, .pillar, .custom-item").forEach(el => el.remove());
+    }
 
-const tables=await response.json()
+    function createPillar(left, top, text = "") {
+      const el = document.createElement("div");
+      el.className = "pillar";
+      el.style.left = left + "px";
+      el.style.top = top + "px";
 
-tables.forEach(table=>{
-createTable(table)
-})
+      const inner = document.createElement("div");
+      inner.className = "pillar-text";
+      inner.textContent = text;
 
-}
+      el.appendChild(inner);
+      return el;
+    }
 
-function createTable(tableData){
+    function createCustomItem(left, top, text = "") {
+      const el = document.createElement("div");
+      el.className = "custom-item";
+      el.style.left = left + "px";
+      el.style.top = top + "px";
 
-const table=document.createElement("div")
+      const inner = document.createElement("div");
+      inner.className = "custom-item-text";
+      inner.textContent = text;
 
-table.className="table-circle"+(smallTables.includes(tableData.tableNumber)?" table-small":"")
+      el.appendChild(inner);
+      return el;
+    }
 
-table.id=`table-${tableData.tableNumber}`
+    function gridToPixel(layoutData, gx, gy) {
+      const cols = Number(layoutData.cols || 22);
+      const rows = Number(layoutData.rows || 18);
 
-if(tableData.tableNumber==22){
-table.style.opacity="0"
-table.style.pointerEvents="none"
-}
+      const leftPadding = 56;
+      const rightPadding = 36;
+      const topPadding = 110;
+      const bottomPadding = 40;
 
-const num=document.createElement("div")
+      const usableW = HALL_W - leftPadding - rightPadding;
+      const usableH = HALL_H - topPadding - bottomPadding;
 
-num.className="table-number"
+      const cellW = usableW / cols;
+      const cellH = usableH / rows;
 
-num.innerText=tableData.tableNumber
+      return {
+        x: leftPadding + (Number(gx) - 1) * cellW,
+        y: topPadding + (Number(gy) - 1) * cellH
+      };
+    }
 
-table.appendChild(num)
+    function renderSeatName(tableEl, seatKey, name, isSmall) {
+      if (!name || String(name).trim() === "") return;
 
-seatOrder.forEach(time=>{
+      const offsets = isSmall ? seatOffsetsSmall : seatOffsetsLarge;
+      const pos = offsets[seatKey];
+      if (!pos) return;
 
-const spot=document.createElement("div")
+      const seat = document.createElement("div");
+      seat.className = "seat-name";
+      seat.textContent = name;
+      seat.dataset.name = String(name).trim();
+      seat.style.left = pos.x + "px";
+      seat.style.top = pos.y + "px";
+      tableEl.appendChild(seat);
+    }
 
-spot.className="spot"
+    function getMappedTableNumber(item) {
+      const key = `${Number(item.x)},${Number(item.y)}`;
+      return TABLE_COORD_TO_NO[key] || null;
+    }
 
-const name=tableData.seats[time]
+    function renderWithLayout(layoutData, seatingData) {
+      const items = Array.isArray(layoutData.items) ? layoutData.items : [];
 
-if(name && name!==""){
+      const tableItems = items.filter(item =>
+        item.type === "table-large" || item.type === "table-small" || item.type === "table"
+      );
 
-spot.innerText=name
+      const otherItems = items.filter(item =>
+        item.type !== "table-large" && item.type !== "table-small" && item.type !== "table"
+      );
 
-spot.classList.add("occupied")
+      const seatingMap = new Map();
+      (Array.isArray(seatingData) ? seatingData : []).forEach(item => {
+        seatingMap.set(Number(item.tableNumber), item);
+      });
 
-}
+      tableItems.sort((a, b) => {
+        const na = getMappedTableNumber(a) || 999;
+        const nb = getMappedTableNumber(b) || 999;
+        return na - nb;
+      });
 
-table.appendChild(spot)
+      tableItems.forEach(item => {
+        const tableNumber = getMappedTableNumber(item);
+        if (!tableNumber) return;
 
-})
+        const pos = gridToPixel(layoutData, item.x, item.y);
+        const isSmall = item.type === "table-small";
 
-hall.appendChild(table)
+        const tableEl = document.createElement("div");
+        tableEl.className = "table" + (isSmall ? " small" : "");
+        tableEl.style.left = pos.x + "px";
+        tableEl.style.top = pos.y + "px";
 
-}
+        const labelEl = document.createElement("div");
+        labelEl.className = "table-label";
+        labelEl.textContent = String(tableNumber);
+        tableEl.appendChild(labelEl);
 
-function findPerson(){
+        const seatInfo = seatingMap.get(tableNumber);
+        if (seatInfo && seatInfo.seats) {
+          Object.keys(seatInfo.seats).forEach(seatKey => {
+            renderSeatName(tableEl, seatKey, seatInfo.seats[seatKey], isSmall);
+          });
+        }
 
-const keyword=document.getElementById("searchInput").value.trim()
+        hall.appendChild(tableEl);
+      });
 
-document.querySelectorAll(".table-circle")
-.forEach(t=>t.classList.remove("highlight"))
+      otherItems.forEach(item => {
+        const pos = gridToPixel(layoutData, item.x, item.y);
 
-document.querySelectorAll(".spot")
-.forEach(s=>s.classList.remove("found"))
+        if (item.type === "pillar") {
+          hall.appendChild(createPillar(pos.x + 18, pos.y + 18, item.label || "기둥"));
+        } else {
+          hall.appendChild(createCustomItem(pos.x, pos.y, item.label || item.type || "항목"));
+        }
+      });
+    }
 
-if(!keyword)return
+    function applySearchHighlight() {
+      const keyword = searchInput.value.trim().toLowerCase();
+      const seats = hall.querySelectorAll(".seat-name");
 
-let found=false
+      seats.forEach(seat => {
+        const name = (seat.dataset.name || seat.textContent || "").toLowerCase();
+        if (keyword && name.includes(keyword)) {
+          seat.classList.add("match");
+        } else {
+          seat.classList.remove("match");
+        }
+      });
+    }
 
-document.querySelectorAll(".spot.occupied").forEach(spot=>{
+    function applyResponsiveScale() {
+      const availableWidth = Math.max(300, hallOuter.clientWidth - 4);
+      const scale = Math.min(1, availableWidth / HALL_W);
 
-if(spot.innerText.includes(keyword)){
+      hallStage.style.width = (HALL_W * scale) + "px";
+      hallStage.style.height = (HALL_H * scale) + "px";
 
-const parentTable=spot.closest(".table-circle")
+      hall.style.width = HALL_W + "px";
+      hall.style.height = HALL_H + "px";
+      hall.style.transformOrigin = "center center";
+      hall.style.scale = scale;
 
-parentTable.classList.add("highlight")
+      const viewMode = localStorage.getItem("viewer_view_mode") || "rear";
 
-spot.classList.add("found")
+      if (viewMode === "front") {
+        hall.style.transform = "rotate(180deg)";
+        hall.style.setProperty("--text-rotate", "180deg");
+      } else {
+        hall.style.transform = "none";
+        hall.style.setProperty("--text-rotate", "0deg");
+      }
+    }
 
-if(!found){
+    async function loadAndRender() {
+      try {
+        btnRefresh.disabled = true;
+        btnRefresh.textContent = "불러오는 중.";
 
-parentTable.scrollIntoView({
-behavior:"smooth",
-block:"center",
-inline:"center"
-})
+        clearDynamicElements();
+        message.className = "loading";
+        message.textContent = "데이터 불러오는 중.";
 
-found=true
-}
+        const [layoutData, seatingData] = await Promise.all([
+          fetchJson("./layout.json"),
+          fetchJson("./seating.json")
+        ]);
 
-}
+        renderWithLayout(layoutData, seatingData);
+        applySearchHighlight();
+        applyResponsiveScale();
+        message.textContent = "";
+        message.className = "";
+      } catch (err) {
+        console.error(err);
+        message.className = "error";
+        message.textContent = "데이터를 불러오지 못했습니다. layout.json / seating.json 파일을 확인하세요.";
+      } finally {
+        btnRefresh.disabled = false;
+        btnRefresh.textContent = "새로 고침";
+      }
+    }
 
-})
+    btnRear.addEventListener("click", () => setView("rear"));
+    btnFront.addEventListener("click", () => setView("front"));
+    btnRefresh.addEventListener("click", loadAndRender);
+    searchInput.addEventListener("input", applySearchHighlight);
+    window.addEventListener("resize", applyResponsiveScale);
 
-}
-
-loadSeats()
-
-</script>
-
+    setView(localStorage.getItem("viewer_view_mode") || "rear");
+    loadAndRender();
+  </script>
 </body>
 </html>
