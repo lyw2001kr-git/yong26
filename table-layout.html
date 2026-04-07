@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
   <title>정문 기준 좌석 보기</title>
   <style>
     * { box-sizing: border-box; }
@@ -13,6 +13,9 @@
       background: #f4f6f8;
       font-family: Arial, "Malgun Gothic", "맑은 고딕", sans-serif;
       color: #222;
+    }
+
+    body {
       overflow-x: hidden;
     }
 
@@ -95,15 +98,21 @@
 
     .hall-outer {
       width: 100%;
-      overflow: auto;
+      overflow-x: auto;
+      overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-x pan-y;
+      border: 1px solid #cbd5e1;
       border-radius: 16px;
+      background: #dfe5ea;
     }
 
     .hall-stage {
       position: relative;
-      transform-origin: top left;
+      width: 1500px;
+      min-width: 1500px;
+      height: 980px;
+      min-height: 980px;
     }
 
     .hall {
@@ -136,6 +145,7 @@
       letter-spacing: 1px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.18);
       z-index: 5;
+      white-space: nowrap;
     }
 
     .legend {
@@ -275,14 +285,38 @@
     }
 
     @media (max-width: 900px) {
-      .title { font-size: 18px; }
-      .btn { font-size: 14px; padding: 8px 12px; }
-      .search-label { font-size: 13px; }
-      .search-input { width: 160px; }
+      .title {
+        font-size: 18px;
+        width: 100%;
+        margin-right: 0;
+      }
+
+      .btn {
+        font-size: 14px;
+        padding: 8px 12px;
+      }
+
+      .search-label {
+        font-size: 13px;
+      }
+
+      .search-input {
+        width: 150px;
+        max-width: 45vw;
+      }
+
       .status-text {
         width: 100%;
         margin-left: 0;
         margin-top: 4px;
+      }
+
+      .page-wrap {
+        padding: 6px;
+      }
+
+      .hall-outer {
+        min-height: 70vh;
       }
     }
   </style>
@@ -320,8 +354,6 @@
 
   <script>
     const hall = document.getElementById("hall");
-    const hallOuter = document.getElementById("hallOuter");
-    const hallStage = document.getElementById("hallStage");
     const btnRear = document.getElementById("btnRear");
     const btnFront = document.getElementById("btnFront");
     const btnRefresh = document.getElementById("btnRefresh");
@@ -376,7 +408,19 @@
       }
 
       localStorage.setItem("viewer_view_mode", mode);
-      applyResponsiveScale();
+      applyViewMode();
+    }
+
+    function applyViewMode() {
+      const viewMode = localStorage.getItem("viewer_view_mode") || "rear";
+
+      if (viewMode === "front") {
+        hall.style.transform = "rotate(180deg)";
+        hall.style.setProperty("--text-rotate", "180deg");
+      } else {
+        hall.style.transform = "none";
+        hall.style.setProperty("--text-rotate", "0deg");
+      }
     }
 
     async function fetchJson(url) {
@@ -533,29 +577,6 @@
       });
     }
 
-    function applyResponsiveScale() {
-      const availableWidth = Math.max(300, hallOuter.clientWidth - 4);
-      const scale = Math.min(1, availableWidth / HALL_W);
-
-      hallStage.style.width = (HALL_W * scale) + "px";
-      hallStage.style.height = (HALL_H * scale) + "px";
-
-      hall.style.width = HALL_W + "px";
-      hall.style.height = HALL_H + "px";
-      hall.style.transformOrigin = "center center";
-      hall.style.scale = scale;
-
-      const viewMode = localStorage.getItem("viewer_view_mode") || "rear";
-
-      if (viewMode === "front") {
-        hall.style.transform = "rotate(180deg)";
-        hall.style.setProperty("--text-rotate", "180deg");
-      } else {
-        hall.style.transform = "none";
-        hall.style.setProperty("--text-rotate", "0deg");
-      }
-    }
-
     async function loadAndRender() {
       try {
         btnRefresh.disabled = true;
@@ -572,7 +593,8 @@
 
         renderWithLayout(layoutData, seatingData);
         applySearchHighlight();
-        applyResponsiveScale();
+        applyViewMode();
+
         message.textContent = "";
         message.className = "";
       } catch (err) {
@@ -589,7 +611,6 @@
     btnFront.addEventListener("click", () => setView("front"));
     btnRefresh.addEventListener("click", loadAndRender);
     searchInput.addEventListener("input", applySearchHighlight);
-    window.addEventListener("resize", applyResponsiveScale);
 
     setView(localStorage.getItem("viewer_view_mode") || "rear");
     loadAndRender();
